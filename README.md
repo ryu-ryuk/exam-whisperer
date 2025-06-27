@@ -4,6 +4,37 @@ a smart ai-powered exam revision assistant that explains concepts, quizzes you, 
 
 ---
 
+## usage 
+
+- from inside backend/
+
+1. install deps 
+```sh
+uv pip install -r requirements.txt
+```
+
+2. to run the sever/ 
+```sh
+uvicorn main:app --reload
+```
+
+3. to test WhisperCLI
+```sh
+python cli/main.py
+```
+
+4. to test pathway 
+```sh
+python pathway_flow/topic_flow.py
+```
+---
+
+## preview 
+
+![img](/docs/assets/quiz.png)
+
+---
+
 ## why build this?
 
 i am frustrated with LLMs that only *answer* questions, but don’t *help you learn*. when revising, if only there was something that:
