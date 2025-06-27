@@ -6,7 +6,7 @@ a smart ai-powered exam revision assistant that explains concepts, quizzes you, 
 
 ## why build this?
 
-i was frustrated with LLMs that only *answer* questions, but don’t *help you learn*. when revising, i wanted something that:
+i am frustrated with LLMs that only *answer* questions, but don’t *help you learn*. when revising, if only there was something that:
 
 * explains doubts clearly and quickly
 * generates real quizzes, not random questions
