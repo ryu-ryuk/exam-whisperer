@@ -60,7 +60,7 @@ so calls the need for **exam whisperer**.
 * **quiz mode**: generate topic-based mcqs or short-answer questions
 * **learning tracker**: see where you're improving, and where you’re still weak
 * **voice optional**: speak your question and hear the answer (via whisper)
-
+* way more!!
 ---
 
 ## how it works
