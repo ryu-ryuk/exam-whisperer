@@ -29,6 +29,12 @@ python pathway_flow/topic_flow.py
 ```
 ---
 
+## testing
+
+use the fastapi swagger docs if you want: http://localhost:8000/docs
+
+---
+
 ## preview 
 
 ![img](/docs/assets/quiz.png)
