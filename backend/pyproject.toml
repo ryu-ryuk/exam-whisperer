@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+version = "0.1.0"
+name = "exam-whisperer"
+requires-python = ">=3.12"
+dependencies = [
+    "backports.tarfile==1.2.0",
+    "configobj==5.0.9",
+    "configparser==7.2.0",
+    "datetime==5.5",
+    "fastapi==0.115.14",
+    "ipython-pygments-lexers==1.1.1",
+    "jaraco.collections==5.1.0",
+    "nipype==1.10.0",
+    "openai==1.92.3",
+    "pathway==0.24.0",
+    "pip-chill==1.0.3",
+    "pipreqs==0.5.0",
+    "psycopg2==2.9.10",
+    "pymupdf==1.26.1",
+    "python-dotenv==1.1.1",
+    "python-multipart==0.0.20",
+    "pyxnat==1.6.3",
+    "sqlalchemy==2.0.41",
+    "textual==3.5.0",
+    "tinycss2==1.4.0",
+    "tomli==2.0.1",
+    "typing-inspection==0.4.1",
+    "uvicorn==0.34.3",
+    "vulture==2.14",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
