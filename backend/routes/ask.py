@@ -8,7 +8,7 @@ handles the /ask endpoint.
 - streams the event to pathway for topic tracking
 """
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter 
 from services.llm import explain_concept
 from services.tracker import log_topic_attempt
 from models import AskRequest, AskResponse
@@ -17,6 +17,7 @@ router = APIRouter()
 
 @router.post("/ask", response_model=AskResponse)
 async def ask_question(req: AskRequest):
-    explanation, topic = await explain_concept(req.question)
+    explanation, topic = await explain_concept(req.question, req.topic)
+    # can still log to topic_attempts.jsonl for mastery
     await log_topic_attempt(user_id=req.user_id, topic=topic, source="ask")
-    return AskResponse(explanation=explanation.strip(), topic=topic.strip())
+    return AskResponse(explanation=explanation, topic=topic)

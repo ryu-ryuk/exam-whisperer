@@ -10,6 +10,7 @@ import os
 import httpx
 import json
 from services.quiz_utils import parse_quiz_text
+from pathlib import Path
 
 # ------------------------
 PROVIDER = os.getenv("LLM_PROVIDER", "openai")
@@ -25,14 +26,38 @@ if PROVIDER == "openai" and OPENAI_KEY:
 
 # ------------------------
 
-async def explain_concept(question: str):
+LATEST_KB = Path("data/latest_content.jsonl")
+
+def get_topic_bucket(topic: str) -> str:
+    if not LATEST_KB.exists():
+        return ""
+    with LATEST_KB.open() as f:
+        for line in f:
+            rec = json.loads(line)
+            if rec["topic"] == topic:
+                return rec.get("content", "")
+    return ""
+
+async def explain_concept(question: str,topic: str):
     topic = (await detect_topic(question)).strip()
 
-    prompt = (
-        f"topic: {topic}\n"
-        f"question: {question}\n\n"
-        f"explain this clearly and concisely."
-    )
+    user_notes = get_topic_bucket(topic)
+
+    # build a new prompt that injects their notes first
+    prompt_parts = [
+        f"topic: {topic}",
+        f"question: {question}",
+        "",
+        "–– Use the student’s own notes below as context (if any) ––",
+    ]
+    if user_notes:
+        prompt_parts.append(user_notes)
+    else:
+        prompt_parts.append("[No personal notes found for this topic]")
+    prompt_parts.append("")
+    prompt_parts.append("Now explain the concept clearly and concisely.")
+
+    prompt = "\n".join(prompt_parts)
 
     if PROVIDER == "gemini":
         explanation = await _gemini_chat(prompt)

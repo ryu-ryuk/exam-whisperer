@@ -14,6 +14,7 @@ from datetime import datetime
 class AskRequest(BaseModel):
     user_id: str
     question: str
+    topic: Optional[str] = None  # if None, topic is inferred from question
 
 class AskResponse(BaseModel):
     explanation: str
