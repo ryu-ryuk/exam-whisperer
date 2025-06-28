@@ -4,3 +4,4 @@ app.db
 # Python cache files
 __pycache__/
 data/
+backend/src/exam_whisperer.egg-info
