@@ -1,45 +1,49 @@
 
 import pathway as pw
 
+
+
 class ContentSchema(pw.Schema):
     user_id: str
     topic: str
     content: str
     timestamp: pw.DateTimeUtc
 
+# 1) Read the uploaded stream
 uploads = pw.io.jsonlines.read(
     path="data/content_updates.jsonl",
     schema=ContentSchema,
 )
 
-#  Materialize only the latest content per user+topic
-#latest_content = (
-#    uploads
-#    .groupby(uploads.user_id, uploads.topic)
-#    .reduce(
-#        user_id=pw.this.user_id,
-#        topic=pw.this.topic,
-#        content=pw.reducers.last(uploads.content),
-#        updated_at=pw.reducers.max(uploads.timestamp),
-#    )
-#)
-
-# group solely by topic now
-latest_content = (
+# 2) Compute the max timestamp per user+topic
+max_ts = (
     uploads
-    .groupby(uploads.topic)
+    .groupby(uploads.user_id, uploads.topic)
     .reduce(
+        user_id=pw.this.user_id,
         topic=pw.this.topic,
-        content=pw.reducers.last(uploads.content),
-        updated_at=pw.reducers.max(uploads.timestamp),
+        max_timestamp=pw.reducers.max(uploads.timestamp),
     )
 )
 
-# Write it out so your app can consume
-pw.io.jsonlines.write(
-    latest_content,
-    path="data/latest_content.jsonl"
+# 3) Join back to pick the row with that max timestamp
+latest_content = (
+    uploads
+    .join(max_ts, uploads.user_id == max_ts.user_id, uploads.topic == max_ts.topic)
+    .filter(uploads.timestamp == max_ts.max_timestamp)
+    .select(
+        user_id=uploads.user_id,
+        topic=uploads.topic,
+        content=uploads.content,
+        updated_at=uploads.timestamp,
+    )
 )
 
-pw.run()
+# 4) Write the live view
+pw.io.jsonlines.write(
+    latest_content,
+    filename="data/latest_content.jsonl",
+)
 
+# 5) Run Pathway
+pw.run()

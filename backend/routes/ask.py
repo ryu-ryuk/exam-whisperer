@@ -17,7 +17,6 @@ router = APIRouter()
 
 @router.post("/ask", response_model=AskResponse)
 async def ask_question(req: AskRequest):
-    explanation, topic = await explain_concept(req.question, req.topic)
-    # can still log to topic_attempts.jsonl for mastery
+    explanation, topic = await explain_concept(req.question, req.user_id, req.topic)
     await log_topic_attempt(user_id=req.user_id, topic=topic, source="ask")
     return AskResponse(explanation=explanation, topic=topic)

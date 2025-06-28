@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
-from routes import ask, quiz, progress, reminders, syllabus
+from routes import ask, quiz, progress, reminders, syllabus, upload
 
 app = FastAPI()
 from db import Base, engine
@@ -21,6 +21,7 @@ app.include_router(quiz.router)
 app.include_router(progress.router)
 app.include_router(reminders.router)
 app.include_router(syllabus.router)  # opt for now 
+app.include_router(upload.router)  
 
 @app.get("/")
 def root():

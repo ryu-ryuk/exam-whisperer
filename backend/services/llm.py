@@ -28,20 +28,20 @@ if PROVIDER == "openai" and OPENAI_KEY:
 
 LATEST_KB = Path("data/latest_content.jsonl")
 
-def get_topic_bucket(topic: str) -> str:
+def get_user_topic_bucket(user_id: str, topic: str) -> str:
     if not LATEST_KB.exists():
         return ""
-    with LATEST_KB.open() as f:
+    with LATEST_KB.open(encoding="utf-8") as f:
         for line in f:
             rec = json.loads(line)
-            if rec["topic"] == topic:
+            if rec["user_id"] == user_id and rec["topic"] == topic:
                 return rec.get("content", "")
     return ""
 
-async def explain_concept(question: str,topic: str):
-    topic = (await detect_topic(question)).strip()
+async def explain_concept(question: str,user_id:str ,topic: str):
+    topic = topic.strip() or (await detect_topic(question)).strip()
 
-    user_notes = get_topic_bucket(topic)
+    user_notes = get_user_topic_bucket(user_id,topic)
 
     # build a new prompt that injects their notes first
     prompt_parts = [

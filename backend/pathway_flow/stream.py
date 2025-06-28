@@ -15,19 +15,28 @@ def stream_topic_event(user_id: str, topic: str, score: float):
             "topic": topic,
             "score": score,
             "timestamp": timestamp_str
-        }) + "\\n")
+        })) 
+        f.write("\n")
 
-#def stream_content_event(user_id: str, topic: str, content: str):
-def stream_content_event(topic: str, content: str):
+
+def stream_content_event(user_id: str, topic: str, content: str):
     log_path = "data/content_updates.jsonl"
+    # ensure the folder exists
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+    # UTC timestamp with millisecond precision
     now = datetime.datetime.now(datetime.timezone.utc)
-    ts = now.replace(microsecond=(now.microsecond // 1000) * 1000)
-    timestamp = ts.isoformat(timespec="milliseconds").replace("+00:00", "Z")
-    with open(log_path, "a") as f:
+    ts = now.replace(microsecond=(now.microsecond // 1) * 1)
+    timestamp = ts.isoformat()
+
+
+    # append one valid JSON object per line
+    with open(log_path, "a", encoding="utf-8") as f:
         f.write(json.dumps({
-                "topic": topic,
-                "content": content,
-                "timestamp": timestamp
-            }) + "\\n")
+            "user_id": user_id,
+            "topic": topic,
+            "content": content,
+            "timestamp": timestamp
+        }))
+        f.write("\n")
    
