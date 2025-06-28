@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>whisper</title>
+</head>
+
+<body>
+    <h1>whoooshhh</h1>
+    <div>
+        <h2>Ask a Question</h2>
+        <input id="question" type="text" placeholder="e.g., What is a matrix?">
+        <input id="user_id" type="text" value="user123">
+        <input id="topic" type="text" placeholder="e.g., linear algebra">
+        <button onclick="askQuestion()">Ask</button>
+        <div id="explanation"></div>
+    </div>
+    <div>
+        <h2>Take a Quiz</h2>
+        <input id="quiz_topic" type="text" placeholder="e.g., linear algebra">
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+        <button onclick="generateQuiz()">Generate Quiz</button>
+        <div id="quiz"></div>
+    </div>
+    <script>
+        async function askQuestion() {
+            const question = document.getElementById("question").value;
+            const user_id = document.getElementById("user_id").value;
+            const topic = document.getElementById("topic").value;
+            const response = await fetch("/explain", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question, user_id, topic })
+            });
+            const result = await response.json();
+            document.getElementById("explanation").innerText = JSON.stringify(result, null, 2);
+        }
+        async function generateQuiz() {
+            const topic = document.getElementById("quiz_topic").value;
+            const difficulty = document.getElementById("difficulty").value;
+            const response = await fetch("/quiz", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ topic, difficulty })
+            });
+            const result = await response.json();
+            document.getElementById("quiz").innerText = JSON.stringify(result, null, 2);
+        }
+    </script>
+</body>
+
+</html>
