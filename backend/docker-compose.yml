@@ -1,0 +1,39 @@
+services:
+  backend:
+    container_name: exam-whisperer
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./:/app
+    networks:
+      - ew-net
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    container_name: ew-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ew-net
+
+volumes:
+  pgdata:
+
+networks:
+  ew-net:
+    driver: bridge
