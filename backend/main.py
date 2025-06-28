@@ -13,8 +13,12 @@ from routes import ask, quiz, progress, reminders, syllabus, upload
 
 app = FastAPI()
 from db import Base, engine
-import db_models
+from db_models import UserSyllabus, UserTopicActivity
 
+Base.metadata.create_all(bind=engine)
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="static"), name="static")
 # mounting routers
 app.include_router(ask.router)
 app.include_router(quiz.router)
@@ -27,4 +31,3 @@ app.include_router(upload.router)
 def root():
     return {"msg": "exam whisperer backend running"}
 
-Base.metadata.create_all(bind=engine)
