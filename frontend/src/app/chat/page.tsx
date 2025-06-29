@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Brain, Send, User, Sparkles, ArrowLeft, Settings, Upload, FileText, X, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { askAnything } from "@/lib/api"
+import { uploadSyllabus } from "@/lib/api-syllabus"
+import QuizModal from "@/components/QuizModal"
 
 interface Message {
   id: string
@@ -39,6 +42,14 @@ export default function ChatPage() {
   )
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(500)
+
+  // Add state for upload
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  // Quiz state
+  const [quizActive, setQuizActive] = useState(false)
+  const [userTopic, setUserTopic] = useState("")
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -74,10 +85,9 @@ export default function ChatPage() {
     const responses = [
       `${systemPrompt}\n\nRegarding "${userMessage.slice(0, 30)}...":\n\nLet me break this down for you in simple terms.\n\nThis concept is actually quite fascinating when you think about it. The key thing to understand is that everything builds upon fundamental principles.${contextInfo}\n\nWould you like me to explain any specific part in more detail?`,
 
-      `Following my instructions as your tutor: I can help you understand this topic!\n\nHere's a student-friendly explanation:\n\n${
-        userMessage.includes("math") || userMessage.includes("equation")
-          ? "Mathematics is all about patterns and relationships. Let's work through this step by step so it makes perfect sense."
-          : "This is a really important concept that many students find challenging at first, but once you get it, everything clicks into place."
+      `Following my instructions as your tutor: I can help you understand this topic!\n\nHere's a student-friendly explanation:\n\n${userMessage.includes("math") || userMessage.includes("equation")
+        ? "Mathematics is all about patterns and relationships. Let's work through this step by step so it makes perfect sense."
+        : "This is a really important concept that many students find challenging at first, but once you get it, everything clicks into place."
       }${contextInfo}\n\nWhat specific aspect would you like me to focus on?`,
 
       `Great question! Based on my role as your study companion:\n\nLet me explain this in a way that's easy to remember:\n\n• First, think of it like this...\n• Then, consider how it connects to what you already know\n• Finally, here's a simple way to remember it${contextInfo}\n\nDoes this help clarify things? Feel free to ask follow-up questions!`,
@@ -101,12 +111,12 @@ export default function ChatPage() {
     setInput("")
     setIsLoading(true)
 
-    // Simulate AI thinking time
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Call backend endpoint for explanation
+      const response = await askAnything(input.trim(), "demo-user", userTopic);
+      // Adjust this depending on your backend's response shape
+      const aiResponse = response.answer || response.explanation || JSON.stringify(response)
 
-    const aiResponse = generateAIResponse(input.trim())
-
-    simulateTyping(aiResponse, () => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
@@ -114,8 +124,18 @@ export default function ChatPage() {
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, assistantMessage])
-      setIsLoading(false)
-    })
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          content: "Sorry, there was an error contacting the backend.",
+          role: "assistant",
+          timestamp: new Date(),
+        },
+      ])
+    }
+    setIsLoading(false)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -123,6 +143,52 @@ export default function ChatPage() {
       e.preventDefault()
       handleSubmit(e)
     }
+  }
+
+  // Handler for PDF upload
+  async function handlePdfUpload(file: File) {
+    setUploading(true)
+    setUploadError(null)
+    try {
+      // You can replace 'demo-user' with real user id logic
+      const result = await uploadSyllabus(file, "demo-user")
+      // Optionally, show topics or update contextDocs with result.topics
+      alert("Syllabus uploaded! Topics: " + JSON.stringify(result.topics))
+    } catch (err: any) {
+      setUploadError(err.message || "Upload failed")
+    }
+    setUploading(false)
+  }
+
+  // Read Aloud using backend Omnidimension TTS
+  async function handleReadAloud(text: string) {
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error("TTS failed");
+      const data = await res.json();
+      if (!data.audio) throw new Error("No audio returned");
+      const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+      audio.play();
+    } catch (err) {
+      alert("Text-to-speech failed. Please try again.");
+    }
+  }
+
+  // Handler for quiz completion
+  const handleQuizComplete = (result: { correct: number; total: number; topic: string }) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        content: `You scored ${result.correct} / ${result.total} on the quiz about "${result.topic}"!`,
+        role: "assistant",
+        timestamp: new Date(),
+      },
+    ])
   }
 
   return (
@@ -169,9 +235,7 @@ export default function ChatPage() {
                 className={`flex items-start space-x-3 max-w-[80%] ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""}`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.role === "user" ? "bg-purple-600" : "bg-gradient-to-r from-blue-500 to-purple-600"
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-purple-600" : "bg-gradient-to-r from-blue-500 to-purple-600"}`}
                 >
                   {message.role === "user" ? (
                     <User className="w-4 h-4 text-white" />
@@ -180,15 +244,23 @@ export default function ChatPage() {
                   )}
                 </div>
                 <Card
-                  className={`p-4 ${
-                    message.role === "user" ? "bg-purple-600 text-white" : "bg-white/10 text-white border-white/20"
-                  }`}
+                  className={`p-4 ${message.role === "user" ? "bg-purple-600 text-white" : "bg-white/10 text-white border-white/20"}`}
                 >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="whitespace-pre-wrap flex flex-col gap-2">
+                    {message.content}
+                    {message.role === "assistant" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 w-fit"
+                        onClick={() => handleReadAloud(message.content)}
+                      >
+                        🔊 Read Aloud
+                      </Button>
+                    )}
+                  </div>
                   <div
-                    className={`text-xs mt-2 opacity-70 ${
-                      message.role === "user" ? "text-purple-100" : "text-gray-300"
-                    }`}
+                    className={`text-xs mt-2 opacity-70 ${message.role === "user" ? "text-purple-100" : "text-gray-300"}`}
                   >
                     {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
@@ -232,70 +304,65 @@ export default function ChatPage() {
       {/* Input Area */}
       <div className="bg-black/20 backdrop-blur-md border-t border-white/10 p-4">
         <div className="container mx-auto max-w-4xl">
-          <form onSubmit={handleSubmit} className="flex items-end space-x-4">
-            <div className="flex-1 relative">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about your studies..."
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[50px] max-h-[120px]"
-                rows={1}
-                disabled={isLoading}
-              />
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-                Press Enter to send, Shift+Enter for new line
-              </div>
+          {/* Quiz trigger button above input */}
+          {!quizActive && (
+            <div className="mb-2 flex justify-end">
+              <Button
+                variant="outline"
+                className="bg-purple-700 text-white border-purple-400 hover:bg-purple-800"
+                onClick={() => setQuizActive(true)}
+              >
+                📝 Take a Quiz
+              </Button>
             </div>
-            <Button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 h-[50px]"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </Button>
-          </form>
-
-          {/* Quick Suggestions */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 text-xs"
-              onClick={() => setInput("Explain photosynthesis in simple terms")}
-              disabled={isLoading}
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              Explain photosynthesis
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 text-xs"
-              onClick={() => setInput("Help me with quadratic equations")}
-              disabled={isLoading}
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              Quadratic equations
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 text-xs"
-              onClick={() => setInput("Create a quiz on World War 2")}
-              disabled={isLoading}
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              WW2 Quiz
-            </Button>
-          </div>
+          )}
+          {/* Hide chat input if quiz is active */}
+          {!quizActive && (
+            <form onSubmit={handleSubmit} className="flex items-end space-x-4">
+              <div className="flex-1 relative">
+                {/* Topic selector */}
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-white text-sm font-semibold bg-purple-800 px-2 py-1 rounded-l">Topic</span>
+                  <input
+                    className="border border-purple-500 bg-slate-900 text-white p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+                    placeholder="Set topic (e.g. Paleontology)"
+                    value={userTopic}
+                    onChange={e => setUserTopic(e.target.value)}
+                  />
+                </div>
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me anything about your studies..."
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[50px] max-h-[120px]"
+                  rows={1}
+                  disabled={isLoading}
+                />
+                <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                  Press Enter to send, Shift+Enter for new line
+                </div>
+              </div>
+              <Button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 h-[50px]"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </Button>
+            </form>
+          )}
+          {/* ...existing quick suggestions... */}
         </div>
       </div>
+
+      {/* Quiz Modal Overlay */}
+      <QuizModal open={quizActive} onClose={() => setQuizActive(false)} topic={userTopic} onQuizComplete={handleQuizComplete} />
 
       {/* Context Control Modal */}
       {showContextModal && (
@@ -367,32 +434,22 @@ export default function ChatPage() {
                     <Button
                       size="sm"
                       className="bg-purple-600 hover:bg-purple-700 text-white"
+                      disabled={uploading}
                       onClick={() => {
                         const input = document.createElement("input")
                         input.type = "file"
-                        input.accept = ".txt,.md,.pdf"
+                        input.accept = ".pdf"
                         input.onchange = (e) => {
                           const file = (e.target as HTMLInputElement).files?.[0]
                           if (file) {
-                            const reader = new FileReader()
-                            reader.onload = (e) => {
-                              const content = e.target?.result as string
-                              const newDoc = {
-                                id: Date.now().toString(),
-                                name: file.name,
-                                content: content,
-                                type: file.type || "text/plain",
-                              }
-                              setContextDocs((prev) => [...prev, newDoc])
-                            }
-                            reader.readAsText(file)
+                            handlePdfUpload(file)
                           }
                         }
                         input.click()
                       }}
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      Upload Document
+                      {uploading ? "Uploading..." : "Upload PDF Syllabus"}
                     </Button>
                   </div>
 
