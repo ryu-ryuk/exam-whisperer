@@ -595,6 +595,7 @@ dependencies = [
     { name = "ipython-pygments-lexers" },
     { name = "jaraco-collections" },
     { name = "nipype" },
+    { name = "omnidimension" },
     { name = "openai" },
     { name = "pathway" },
     { name = "pip-chill" },
@@ -623,6 +624,7 @@ requires-dist = [
     { name = "ipython-pygments-lexers", specifier = "==1.1.1" },
     { name = "jaraco-collections", specifier = "==5.1.0" },
     { name = "nipype", specifier = "==1.10.0" },
+    { name = "omnidimension", specifier = "==0.2.9" },
     { name = "openai", specifier = "==1.92.3" },
     { name = "pathway", specifier = "==0.24.0" },
     { name = "pip-chill", specifier = "==1.0.3" },
@@ -1814,6 +1816,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/22/8a/ccdf201457ed8ac6245187850aff4ca56a79edbea4829f4e9f14d46fa9a5/numpy-2.3.1-cp313-cp313t-win32.whl", hash = "sha256:6269b9edfe32912584ec496d91b00b6d34282ca1d07eb10e82dfc780907d6c2e", size = 6440678, upload-time = "2025-06-21T12:24:21.596Z" },
     { url = "https://files.pythonhosted.org/packages/f1/7e/7f431d8bd8eb7e03d79294aed238b1b0b174b3148570d03a8a8a8f6a0da9/numpy-2.3.1-cp313-cp313t-win_amd64.whl", hash = "sha256:2a809637460e88a113e186e87f228d74ae2852a2e0c44de275263376f17b5bdc", size = 12870697, upload-time = "2025-06-21T12:24:40.644Z" },
     { url = "https://files.pythonhosted.org/packages/d4/ca/af82bf0fad4c3e573c6930ed743b5308492ff19917c7caaf2f9b6f9e2e98/numpy-2.3.1-cp313-cp313t-win_arm64.whl", hash = "sha256:eccb9a159db9aed60800187bc47a6d3451553f0e1b08b068d8b277ddfbb9b244", size = 10260376, upload-time = "2025-06-21T12:24:56.884Z" },
+]
+
+[[package]]
+name = "omnidimension"
+version = "0.2.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/06/e9/dd2ce7519afe836b6772e6a339d0241f8214be930b3154f80a2bb5d0fe0b/omnidimension-0.2.9.tar.gz", hash = "sha256:7b169fd16d9ed6346b566a3b75c9bb6eeb466ded2871134fff2e02e2a59a6ee5", size = 13225, upload-time = "2025-06-23T15:02:58.201Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/25/d518c6edd8f27dbe2c4e8bf7fcac7455a41f3dc15d6081e66def5cc98b09/omnidimension-0.2.9-py3-none-any.whl", hash = "sha256:74d426e8ce694ef1fa3d04e41c7a94f637b2f8d235d134c4d2c566132b4b508c", size = 14576, upload-time = "2025-06-23T15:02:57.145Z" },
 ]
 
 [[package]]
