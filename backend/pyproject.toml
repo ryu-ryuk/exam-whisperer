@@ -31,6 +31,8 @@ dependencies = [
     "typing-inspection==0.4.1",
     "uvicorn==0.34.3",
     "vulture==2.14",
+    "omnidimension==0.2.9",
+
 ]
 
 [tool.setuptools]
