@@ -10,6 +10,9 @@ load_dotenv()
 
 from fastapi import FastAPI
 from routes import ask, quiz, progress, reminders, syllabus, upload
+import threading
+from backend.src.services.jsonl_uploader import run_uploader
+
 app = FastAPI()
 from db import Base, engine
 from db_models import UserSyllabus, UserTopicActivity
@@ -53,3 +56,8 @@ def root():
 # Start Pathway analytics pipeline in background
 # threading.Thread(target=run_pathway_pipeline, daemon=True).start()
 
+
+@app.on_event("startup")
+def start_jsonl_uploader():
+    t = threading.Thread(target=run_uploader, daemon=True)
+    t.start()
