@@ -8,11 +8,13 @@ handles /reminders endpoint.
 
 from fastapi import APIRouter
 from services.tracker import get_due_reminders
+from services.event_logger import log_user_event
 from models import ReminderResponse
 
 router = APIRouter()
 
 @router.get("/reminders", response_model=ReminderResponse)
 async def get_reminders(user_id: str):
+    log_user_event(user_id, "reminders_view", None)
     reminders = await get_due_reminders(user_id)
     return ReminderResponse(reminders=reminders)

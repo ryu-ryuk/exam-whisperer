@@ -1,6 +1,5 @@
 from fastapi import APIRouter, UploadFile, Form
 from services.parser import parse_pdf_topics
-from models import UploadResponse
 from db import SessionLocal
 from db_models import UserSyllabus
 import tempfile, os, json
