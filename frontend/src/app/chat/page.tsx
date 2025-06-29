@@ -362,7 +362,7 @@ export default function ChatPage() {
       </div>
 
       {/* Quiz Modal Overlay */}
-      <QuizModal open={quizActive} onClose={() => setQuizActive(false)} topic={userTopic} onQuizComplete={handleQuizComplete} />
+      <QuizModal open={quizActive} onClose={() => setQuizActive(false)} defaultTopic={userTopic} onQuizComplete={handleQuizComplete} />
 
       {/* Context Control Modal */}
       {showContextModal && (

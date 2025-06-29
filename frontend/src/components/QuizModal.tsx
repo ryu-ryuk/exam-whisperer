@@ -7,11 +7,11 @@ import { quizAsk, quizEvaluate } from "@/lib/api";
 interface QuizModalProps {
     open: boolean;
     onClose: () => void;
-    topic: string;
+    defaultTopic: string;
     onQuizComplete?: (result: { correct: number; total: number; topic: string }) => void;
 }
 
-export default function QuizModal({ open, onClose, topic, onQuizComplete }: QuizModalProps) {
+export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete }: QuizModalProps) {
     const [quizNumQuestions, setQuizNumQuestions] = useState(3);
     const [quizDifficulty, setQuizDifficulty] = useState("medium");
     const [quizQuestions, setQuizQuestions] = useState<any[]>([]); // stores all fetched questions
@@ -23,11 +23,11 @@ export default function QuizModal({ open, onClose, topic, onQuizComplete }: Quiz
     const [quizResult, setQuizResult] = useState<{ correct: number; total: number }>({ correct: 0, total: 0 });
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [quizStarted, setQuizStarted] = useState(false);
-    const [localTopic, setLocalTopic] = useState(topic);
+    const [localTopic, setLocalTopic] = useState(defaultTopic);
 
     useEffect(() => {
-        if (open) setLocalTopic(topic);
-    }, [open, topic]);
+        if (open) setLocalTopic(defaultTopic);
+    }, [open, defaultTopic]);
 
     // Start quiz handler
     const startQuiz = async () => {
