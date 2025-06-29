@@ -10,6 +10,8 @@ load_dotenv()
 
 from fastapi import FastAPI
 from routes import ask, quiz, progress, reminders, syllabus, upload
+import threading
+from services.jsonl_uploader import run_uploader
 
 app = FastAPI()
 from db import Base, engine
@@ -30,4 +32,10 @@ app.include_router(upload.router)
 @app.get("/")
 def root():
     return {"msg": "exam whisperer backend running"}
+
+
+@app.on_event("startup")
+def start_jsonl_uploader():
+    t = threading.Thread(target=run_uploader, daemon=True)
+    t.start()
 

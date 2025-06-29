@@ -17,4 +17,18 @@ class UserSyllabus(Base):
     __tablename__ = "user_syllabus"
 
     user_id = Column(String, primary_key=True)
-    topics_text = Column(Text)  
+    topics_text = Column(Text) 
+
+class UserTopicProgress(Base):
+    """
+    ORM model for persisting user-topic progress.
+    """
+    __tablename__ = "user_topic_progress"
+
+    user_id       = Column(String,  primary_key=True)
+    topic         = Column(String,  primary_key=True)
+    latest_score  = Column(Float,   nullable=False)
+    average_score = Column(Float,   nullable=False)
+    last_attempt  = Column(DateTime, nullable=False)
+    trend         = Column(String,  nullable=False)
+    status        = Column(String,  nullable=False)

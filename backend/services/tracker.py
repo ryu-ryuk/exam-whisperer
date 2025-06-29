@@ -6,9 +6,10 @@
 """
 import asyncio
 from db import SessionLocal
-from db_models import UserTopicActivity
+from db_models import UserTopicActivity, UserTopicProgress
 from datetime import datetime, timedelta
 from pathway_flow.stream import stream_topic_event
+from typing import Dict, Any, List
 import json 
 
 # --- update topic stats and stream to pathway ---
@@ -111,3 +112,49 @@ def get_user_progress_from_pathway(user_id: str):
         "user_id": user_id,
         "stats": stats
     }
+
+def get_user_progress_from_db(user_id: str) -> Dict[str, Any]:
+    session = SessionLocal()
+    try:
+        # 1) Fetch all progress rows for this user
+        rows = (
+            session.query(UserTopicProgress)
+                   .filter(UserTopicProgress.user_id == user_id)
+                   .all()
+        )
+
+        # 2) Transform into dicts
+        topics: List[Dict[str, Any]] = []
+        for row in rows:
+            topics.append({
+                "topic":         row.topic,
+                "latest_score":  row.latest_score,
+                "average_score": row.average_score,
+                "last_attempt":  row.last_attempt,   # Pydantic will handle ISO formatting
+                "trend":         row.trend,
+                "status":        row.status,
+            })
+
+        # 3) Compute summary
+        total = len(topics)
+        mastered = sum(1 for t in topics if t["status"] == "mastered")
+        improving = sum(1 for t in topics if t["trend"] == "improving")
+        needs_attention = sum(1 for t in topics if t["status"] == "weak")
+        average_score = round(sum(t["latest_score"] for t in topics) / total, 2) if total else 0.0
+
+        summary = {
+            "topics_attempted": total,
+            "mastered": mastered,
+            "improving": improving,
+            "needs_attention": needs_attention,
+            "average_score": average_score,
+        }
+
+        return {
+            "user_id": user_id,
+            "summary": summary,
+            "topics":  topics
+        }
+
+    finally:
+        session.close()
