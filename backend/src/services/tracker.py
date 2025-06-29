@@ -68,23 +68,20 @@ def get_user_progress(user_id: str):
     }
 
 # --- suggest revision reminders ---
-def get_due_reminders(user_id: str):
+async def get_due_reminders(user_id: str):
     db = SessionLocal()
     entries = db.query(UserTopicActivity).filter_by(user_id=user_id).all()
     db.close()
-
     now = datetime.utcnow()
     reminders = []
-
     for e in entries:
-        days = (now - e.last_attempt).days
-        if days >= 3:
+        days = (now - e.last_attempt).days if e.last_attempt else None
+        if e.mastery_status == "weak":
             reminders.append({
                 "topic": e.topic,
                 "days_since_last_attempt": days,
-                "suggested_action": f"revise {e.topic} (last seen {days} days ago)"
+                "suggested_action": "Review this topic to improve your understanding."
             })
-
     return reminders
 
 # --- helper to classify score into mastery ---
@@ -97,24 +94,24 @@ def _infer_mastery(score: float) -> str:
 
 # --- fallback: read from streamed jsonl ---
 def get_user_progress_from_pathway(user_id: str):
-    stats = []
-    try:
-        with open("data/topic_mastery.jsonl") as f:
-            for line in f:
-                row = json.loads(line)
-                if row["user_id"] == user_id:
-                    stats.append({
-                        "topic": row["topic"],
-                        "last_attempt": row["last_attempt"],
-                        "average_score": row["average_score"],
-                        "mastery_status": row["mastery_status"]
-                    })
-    except FileNotFoundError:
-        pass
-
+    db = SessionLocal()
+    entries = db.query(UserTopicActivity).filter_by(user_id=user_id).all()
+    db.close()
+    # Sort topics by mastery_status and average_score
+    strong_topics = [e.topic for e in entries if e.mastery_status == "strong"]
+    stats = [
+        {
+            "topic": e.topic,
+            "last_attempt": e.last_attempt,
+            "average_score": e.average_score,
+            "mastery_status": e.mastery_status
+        }
+        for e in entries
+    ]
     return {
         "user_id": user_id,
-        "stats": stats
+        "stats": stats,
+        "strong_topics": strong_topics
     }
 
 # --- build full LLM context: notes + history + preferences ---

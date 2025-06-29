@@ -6,16 +6,27 @@ abstracts all interactions with LLMs (openai, gemini, ollama, etc).
 - used by /ask, /quiz, and topic detection
 """
 
+# flow: sst -> llm -> tts
+
 import os, json, logging
 import httpx
 from pathlib import Path
 from cachetools import TTLCache
 from services.quiz_utils import parse_quiz_text
-from services.tracker import get_user_context
+from services.tracker import get_user_context, log_topic_attempt
 from cachetools import TTLCache
+# from omnidimension import Client
+
+# init omnidimension client
+# OMNIDIM_API_KEY = os.getenv("OMNIDIM_API_KEY")
+# omnidim_client = Client(OMNIDIM_API_KEY) if OMNIDIM_API_KEY else None
+
+# exception class 
+class VoiceProcessingError(Exception):
+    pass
 
 # –– config ––
-PROVIDER = os.getenv("LLM_PROVIDER", "openai")
+PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
@@ -31,27 +42,78 @@ cache = TTLCache(maxsize=256, ttl=600)
 class LLMProviderError(Exception):
     pass
 session_context = TTLCache(maxsize=1000, ttl=1800)
+
+# Omnidimension agent setup
+# OMNIDIM_AGENT_ID = os.getenv("OMNIDIM_AGENT_ID")
+# if OMNIDIM_API_KEY and not OMNIDIM_AGENT_ID:
+    # Create the agent on startup if not already created
+    # agent_response = omnidim_client.agent.create(
+    #     name="Exam Whisperer Helper",
+    #     welcome_message="""Hi there, how can I help you today?""",
+    #     context_breakdown=[
+    #         {"title": "Greeting and Inquiry", "body": """ Begin with a friendly and warm greeting. Ask the student which exam topic they would like tips on today. Example: 'Hi, this is your Exam Whisperer Helper. What exam topic are you focusing on today?' """, "is_enabled": False},
+    #         {"title": "Deliver Exam Tips", "body": """ Once the student mentions a topic [exam_topic], mention no gibberish or fluff! Proceed to read the pre-defined text prompt clearly and naturally. """, "is_enabled": True},
+    #         {"title": "Post-Information Engagement", "body": "", "is_enabled": False}
+    #     ],
+    #     transcriber={
+    #         "provider": "deepgram_stream",
+    #         "silence_timeout_ms": 400,
+    #         "model": "nova-3",
+    #         "numerals": True,
+    #         "punctuate": True,
+    #         "smart_format": False,
+    #         "diarize": False
+    #     },
+    #     model={
+    #         "model": "gpt-4o-mini",
+    #         "temperature": 0.7
+    #     },
+    #     voice={
+    #         "provider": "eleven_labs",
+    #         "voice_id": "hT1MsRBLaHSXGeWzW6xF"
+    #     },
+    #     web_search={
+    #         "enabled": True,
+    #         "provider": "DuckDuckGo"
+    #     },
+    #     post_call_actions={
+    #         "email": {
+    #             "enabled": True,
+    #             "recipients": ["example@example.com"],
+    #             "include": ["summary", "extracted_variables"]
+    #         },
+    #         "extracted_variables": [
+    #             {"key": "exam_topic", "prompt": "Extract the exam topic the student is interested in receiving tips about."}
+    #         ]
+    #     },
+    # )
+    # OMNIDIM_AGENT_ID = agent_response['json'].get('id')
+
 # –– main explain api ––
 async def explain_concept(question: str, user_id: str, topic: str) -> dict:
+    logging.info(f"[explain_concept] question={question!r}, user_id={user_id!r}, topic={topic!r}")
     if not question.strip():
         raise ValueError("Question cannot be empty.")
     
     cache_key = (user_id, topic, question)
     if cache_key in cache:
+        logging.info(f"[explain_concept] cache hit for key={cache_key}")
         return cache[cache_key]
     
     topic = (topic.strip() if topic else None) or (await detect_topic(question)).strip()
+    logging.info(f"[explain_concept] detected topic: {topic}")
     user_context = get_user_context(user_id, topic)
+    logging.info(f"[explain_concept] user_context: {user_context}")
     
     # check for short-term prior question
     prior_question = session_context.get(user_id)
+    logging.info(f"[explain_concept] prior_question: {prior_question}")
     
     prompt_parts = []
     if prior_question:
         prompt_parts.append(
             f"Previously, the user asked: '{prior_question}'. Use this as context if the current question depends on it.\n"
         )
-
     prompt_parts.extend([
         f"Current question: {question}",
         "",
@@ -61,31 +123,54 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
         "Explain the concept clearly and concisely in 100-150 words."
     ])
     prompt = "\n".join(prompt_parts)
+    logging.info(f"[explain_concept] prompt: {prompt}")
 
     try:
-        explanation = await _call_llm(prompt)
+        # Use Omnidimension agent if available
+        explanation = None
+        if OMNIDIM_API_KEY and OMNIDIM_AGENT_ID:
+            try:
+                agent_response = omnidim_client.agent.call(
+                    OMNIDIM_AGENT_ID,
+                    input=prompt,
+                    user_id=user_id
+                )
+                explanation = agent_response['json'].get('response', '').strip()
+                logging.info(f"[explain_concept] Omnidimension agent response: {explanation}")
+            except Exception as e:
+                logging.error(f"[explain_concept] Omnidimension agent call failed: {e}")
+                explanation = None
+        if not explanation:
+            # fallback to _call_llm
+            explanation = await _call_llm(prompt)
+            logging.info(f"[explain_concept] fallback LLM explanation: {explanation}")
+
+        # log to Pathway for real-time adaptation (low score for ask, e.g. 0.3)
+        await log_topic_attempt(user_id, topic, score=0.3, source="ask")
+
         related_topics = await suggest_related_topics(topic, user_id)
-        
+        logging.info(f"[explain_concept] related_topics: {related_topics}")
         result = {
-            "explanation": explanation.strip() or f"No explanation available for {topic}.",
+            "explanation": explanation.strip() if explanation else "",
+            "audio_response": None,  # No backend TTS
             "topic": topic or "Unknown",
             "related_topics": related_topics,
             "confidence": 0.95
         }
         cache[cache_key] = result
-
-        # update session-level context
-        session_context[user_id] = question.strip()
-
+        logging.info(f"[explain_concept] result: {result}")
         return result
     except LLMProviderError as e:
+        logging.error(f"[explain_concept] LLMProviderError: {e}")
         return {
             "explanation": f"Error: {str(e)}",
             "topic": topic or "Unknown",
             "related_topics": [],
             "confidence": 0.0
         }
-
+    except Exception as e:
+        logging.exception(f"[explain_concept] Unexpected error: {e}")
+        raise
 
 # –– related topics ––
 async def suggest_related_topics(topic: str, user_id: str) -> list[str]:
