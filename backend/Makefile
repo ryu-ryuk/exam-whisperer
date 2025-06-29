@@ -19,7 +19,7 @@ logs:
 
 # enter app container shell
 sh:
-	$(DOCKER_COMPOSE) exec $(APP_NAME) /bin/bash
+	docker exec $(APP_NAME) /bin/bash
 
 # restart just the app container
 restart:
