@@ -38,19 +38,9 @@ export default function LandingPage() {
               Voice
             </a>
           </div>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white">Get Started</Button>
         </div>
       </nav>
 
-      {/* Scroll Indicator */}
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 hidden lg:flex flex-col space-y-3">
-        <div className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"></div>
-        <div className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"></div>
-        <div className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"></div>
-        <div className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"></div>
-        <div className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"></div>
-        <div className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/60 transition-colors cursor-pointer"></div>
-      </div>
 
       {/* Hero Section */}
       <section className="h-screen flex items-center justify-center relative overflow-hidden snap-start snap-always">
