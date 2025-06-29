@@ -10,15 +10,22 @@ handles the /ask endpoint.
 from fastapi import APIRouter, HTTPException, UploadFile
 from services.llm import explain_concept
 from services.omnidimension import voice_ask
+from services.event_logger import log_user_event
 router = APIRouter()
+from fastapi import Form
 
 @router.post("/explain")
-async def explain(question: str, user_id: str, topic: str = ""):
+async def explain(
+    question: str = Form(...),
+    user_id: str = Form(...),
+    topic: str = Form("")
+):
     """
     explain a concept using llm with optional topic detection
     """
     try:
         result = await explain_concept(question, user_id, topic)
+        log_user_event(user_id, "explain", topic, {"question": question})
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -32,6 +39,8 @@ async def voice_ask_route(file: UploadFile, user_id: str, topic: str = ""):
     """
     try:
         audio_data = await file.read()
-        return await voice_ask(audio_data, user_id, topic)
+        result = await voice_ask(audio_data, user_id, topic)
+        log_user_event(user_id, "voice_ask", topic, {"file": file.filename})
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
