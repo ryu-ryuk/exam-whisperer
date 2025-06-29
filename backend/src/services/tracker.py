@@ -9,10 +9,12 @@ import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Any, List
 
 from db import SessionLocal
 from db_models import UserTopicActivity
 from pathway_flow.stream import stream_topic_event
+from db_models import UserTopicActivity, UserTopicProgress
 
 LATEST_KB = Path("data/latest_content.jsonl")
 TOPIC_ATTEMPTS = Path("data/topic_attempts.jsonl")
@@ -93,26 +95,26 @@ def _infer_mastery(score: float) -> str:
     return "weak"
 
 # --- fallback: read from streamed jsonl ---
-def get_user_progress_from_pathway(user_id: str):
-    db = SessionLocal()
-    entries = db.query(UserTopicActivity).filter_by(user_id=user_id).all()
-    db.close()
-    # Sort topics by mastery_status and average_score
-    strong_topics = [e.topic for e in entries if e.mastery_status == "strong"]
-    stats = [
-        {
-            "topic": e.topic,
-            "last_attempt": e.last_attempt,
-            "average_score": e.average_score,
-            "mastery_status": e.mastery_status
-        }
-        for e in entries
-    ]
-    return {
-        "user_id": user_id,
-        "stats": stats,
-        "strong_topics": strong_topics
-    }
+# def get_user_progress_from_pathway(user_id: str):
+#     db = SessionLocal()
+#     entries = db.query(UserTopicActivity).filter_by(user_id=user_id).all()
+#     db.close()
+#     # Sort topics by mastery_status and average_score
+#     strong_topics = [e.topic for e in entries if e.mastery_status == "strong"]
+#     stats = [
+#         {
+#             "topic": e.topic,
+#             "last_attempt": e.last_attempt,
+#             "average_score": e.average_score,
+#             "mastery_status": e.mastery_status
+#         }
+#         for e in entries
+#     ]
+#     return {
+#         "user_id": user_id,
+#         "stats": stats,
+#         "strong_topics": strong_topics
+#     }
 
 # --- build full LLM context: notes + history + preferences ---
 def get_user_context(user_id: str, topic: str) -> dict:
@@ -149,3 +151,71 @@ def get_user_context(user_id: str, topic: str) -> dict:
                     context["preferences"]["mastery_level"] = rec.get("mastery", "beginner")
 
     return context
+
+
+
+def get_user_progress_from_pathway(user_id: str):
+    stats = []
+    try:
+        with open("data/topic_mastery.jsonl") as f:
+            for line in f:
+                row = json.loads(line)
+                if row["user_id"] == user_id:
+                    stats.append({
+                        "topic": row["topic"],
+                        "last_attempt": row["last_attempt"],
+                        "average_score": row["average_score"],
+                        "mastery_status": row["mastery_status"]
+                    })
+    except FileNotFoundError:
+        pass
+    return {
+        "user_id": user_id,
+        "stats": stats
+    }
+
+def get_user_progress_from_db(user_id: str) -> Dict[str, Any]:
+    session = SessionLocal()
+    try:
+        # 1) Fetch all progress rows for this user
+        rows = (
+            session.query(UserTopicProgress)
+                .filter(UserTopicProgress.user_id == user_id)
+                .all()
+        )
+
+        # 2) Transform into dicts
+        topics: List[Dict[str, Any]] = []
+        for row in rows:
+            topics.append({
+                "topic":         row.topic,
+                "latest_score":  row.latest_score,
+                "average_score": row.average_score,
+                "last_attempt":  row.last_attempt,   # Pydantic will handle ISO formatting
+                "trend":         row.trend,
+                "status":        row.status,
+            })
+
+        # 3) Compute summary
+        total = len(topics)
+        mastered = sum(1 for t in topics if t["status"] == "mastered")
+        improving = sum(1 for t in topics if t["trend"] == "improving")
+        needs_attention = sum(1 for t in topics if t["status"] == "weak")
+        average_score = round(sum(t["latest_score"] for t in topics) / total, 2) if total else 0.0
+
+        summary = {
+            "topics_attempted": total,
+            "mastered": mastered,
+            "improving": improving,
+            "needs_attention": needs_attention,
+            "average_score": average_score,
+        }
+
+        return {
+            "user_id": user_id,
+            "summary": summary,
+            "topics":  topics
+        }
+
+    finally:
+        session.close()

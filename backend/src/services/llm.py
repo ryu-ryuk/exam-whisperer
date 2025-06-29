@@ -19,7 +19,16 @@ from cachetools import TTLCache
 
 # init omnidimension client
 # OMNIDIM_API_KEY = os.getenv("OMNIDIM_API_KEY")
-# omnidim_client = Client(OMNIDIM_API_KEY) if OMNIDIM_API_KEY else None
+# OMNIDIM_AGENT_ID = os.getenv("OMNIDIM_AGENT_ID")
+
+# try:
+#     if OMNIDIM_API_KEY:
+#         from omnidimension import Client
+#         omnidim_client = Client(OMNIDIM_API_KEY)
+#     else:
+#         omnidim_client = None
+# except ImportError:
+#     omnidim_client = None
 
 # exception class 
 class VoiceProcessingError(Exception):
@@ -45,6 +54,7 @@ session_context = TTLCache(maxsize=1000, ttl=1800)
 
 # Omnidimension agent setup
 # OMNIDIM_AGENT_ID = os.getenv("OMNIDIM_AGENT_ID")
+
 # if OMNIDIM_API_KEY and not OMNIDIM_AGENT_ID:
     # Create the agent on startup if not already created
     # agent_response = omnidim_client.agent.create(
@@ -127,23 +137,23 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
 
     try:
         # Use Omnidimension agent if available
-        explanation = None
-        if OMNIDIM_API_KEY and OMNIDIM_AGENT_ID:
-            try:
-                agent_response = omnidim_client.agent.call(
-                    OMNIDIM_AGENT_ID,
-                    input=prompt,
-                    user_id=user_id
-                )
-                explanation = agent_response['json'].get('response', '').strip()
-                logging.info(f"[explain_concept] Omnidimension agent response: {explanation}")
-            except Exception as e:
-                logging.error(f"[explain_concept] Omnidimension agent call failed: {e}")
-                explanation = None
-        if not explanation:
-            # fallback to _call_llm
-            explanation = await _call_llm(prompt)
-            logging.info(f"[explain_concept] fallback LLM explanation: {explanation}")
+        # explanation = None
+        # if OMNIDIM_API_KEY and OMNIDIM_AGENT_ID:
+        #     try:
+        #         agent_response = omnidim_client.agent.call(
+        #             OMNIDIM_AGENT_ID,
+        #             input=prompt,
+        #             user_id=user_id
+        #         )
+        #         explanation = agent_response['json'].get('response', '').strip()
+        #         logging.info(f"[explain_concept] Omnidimension agent response: {explanation}")
+        #     except Exception as e:
+        #         logging.error(f"[explain_concept] Omnidimension agent call failed: {e}")
+        #         explanation = None
+        # if not explanation:
+        #     # fallback to _call_llm
+        explanation = await _call_llm(prompt)
+        # logging.info(f"[explain_concept] fallback LLM explanation: {explanation}")
 
         # log to Pathway for real-time adaptation (low score for ask, e.g. 0.3)
         await log_topic_attempt(user_id, topic, score=0.3, source="ask")
@@ -152,7 +162,7 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
         logging.info(f"[explain_concept] related_topics: {related_topics}")
         result = {
             "explanation": explanation.strip() if explanation else "",
-            "audio_response": None,  # No backend TTS
+            # "audio_response": None,  # No backend TTS
             "topic": topic or "Unknown",
             "related_topics": related_topics,
             "confidence": 0.95

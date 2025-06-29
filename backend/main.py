@@ -11,7 +11,7 @@ load_dotenv()
 from fastapi import FastAPI
 from routes import ask, quiz, progress, reminders, syllabus, upload
 import threading
-from backend.src.services.jsonl_uploader import run_uploader
+from src.services.jsonl_uploader import run_uploader
 
 app = FastAPI()
 from db import Base, engine
