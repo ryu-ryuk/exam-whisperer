@@ -16,7 +16,7 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="h-screen overflow-y-scroll scroll-smooth snap-y snap-mandatory">
+    <div className="h-screen overflow-y-scroll bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 scroll-smooth snap-y snap-mandatory">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
