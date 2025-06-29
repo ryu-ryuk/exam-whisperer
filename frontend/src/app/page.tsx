@@ -72,10 +72,12 @@ export default function LandingPage() {
             with smart quizzes, and track your progress.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/chat">
             <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg">
               Start Learning Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
+          </a>
             <Button
               size="lg"
               variant="outline"
@@ -369,17 +371,12 @@ export default function LandingPage() {
             effectively.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/chat">
             <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold">
-              Start Free Trial
+              Start Learning
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 px-8 py-4 text-lg bg-transparent"
-            >
-              View Pricing
-            </Button>
+          </a>
           </div>
         </div>
       </section>
