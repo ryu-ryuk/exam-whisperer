@@ -130,8 +130,5 @@ POSTGRES_DB=dev
 * leaderboard & gamification
 * spaced repetition engine
 
-## 🖼preview
-![preview](docs/assets/quiz.png)
-
 ## 📜 license
 [MIT](LICENSE) — built by zen with a lot of stress (๑•́‿•̀๑)
