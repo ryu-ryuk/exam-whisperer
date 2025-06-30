@@ -4,8 +4,9 @@ a smart ai-powered exam revision assistant that explains concepts, quizzes you, 
 
 ---
 
-#### TODO: 
-1. quiz questions shouldn't be cached 
+<!-- #### TODO:  -->
+<!-- 1. quiz questions shouldn't be cached  -->
+<!-- 2. the progress api  -->
 
 ## usage 
 
