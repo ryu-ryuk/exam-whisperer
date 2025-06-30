@@ -180,8 +180,8 @@ def get_user_progress_from_db(user_id: str) -> Dict[str, Any]:
         # 1) Fetch all progress rows for this user
         rows = (
             session.query(UserTopicProgress)
-                .filter(UserTopicProgress.user_id == user_id)
-                .all()
+                   .filter(UserTopicProgress.user_id == user_id)
+                   .all()
         )
 
         # 2) Transform into dicts

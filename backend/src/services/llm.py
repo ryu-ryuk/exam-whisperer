@@ -15,6 +15,12 @@ from cachetools import TTLCache
 from services.quiz_utils import parse_quiz_text
 from services.tracker import get_user_context, log_topic_attempt
 from cachetools import TTLCache
+
+from omnidimension import Client
+
+# init omnidimension client
+
+
 # from omnidimension import Client
 
 # init omnidimension client
@@ -154,7 +160,7 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
         #     # fallback to _call_llm
         explanation = await _call_llm(prompt)
         # logging.info(f"[explain_concept] fallback LLM explanation: {explanation}")
-
+    
         # log to Pathway for real-time adaptation (low score for ask, e.g. 0.3)
         await log_topic_attempt(user_id, topic, score=0.3, source="ask")
 
@@ -162,7 +168,7 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
         logging.info(f"[explain_concept] related_topics: {related_topics}")
         result = {
             "explanation": explanation.strip() if explanation else "",
-            # "audio_response": None,  # No backend TTS
+            "audio_response": None,
             "topic": topic or "Unknown",
             "related_topics": related_topics,
             "confidence": 0.95
