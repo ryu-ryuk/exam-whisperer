@@ -11,7 +11,7 @@ down:
 
 # rebuild image without cache
 rebuild:
-	$(DOCKER_COMPOSE) build --no-cache
+	$(DOCKER_COMPOSE) build 
 
 # view logs
 logs:
