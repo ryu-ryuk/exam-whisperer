@@ -1,167 +1,192 @@
-# exam whisperer
 
-a smart ai-powered exam revision assistant that explains concepts, quizzes you, and tracks your topic mastery in real time.
 
----
+# whisper
 
-<!-- #### TODO:  -->
-<!-- 1. quiz questions shouldn't be cached  -->
-<!-- 2. the progress api  -->
-
-## usage 
-
-- from inside backend/
-
-1. install deps 
-```sh
-uv pip install -r requirements.txt
-```
-
-2. to run the sever/ 
-```sh
-uvicorn main:app --reload
-```
-
-3. to test WhisperCLI
-```sh
-python cli/main.py
-```
-
-4. to test pathway 
-```sh
-python pathway_flow/topic_flow.py
-```
----
-
-## testing
-
-use the fastapi swagger docs if you want: http://localhost:8000/docs
+a smart, ai-powered revision assistant that **explains concepts**, **quizzes you**, and **tracks your mastery** in real time. built for serious exam prep — not just casual chatting.
 
 ---
 
-## preview 
+## usage
 
-![img](/docs/assets/quiz.png)
+from inside `backend/`:
+
+```bash
+
+# build the containers
+make rebuild
+
+# run the server
+make up
+
+# run pathway knowledge and progress flow
+python3 backend/src/pathway_flow/pathway_main.py
+
+```
 
 ---
 
-## why build this?
+🌐 preview
 
-i am frustrated with LLMs that only *answer* questions, but don’t *help you learn*. when revising, if only there was something that:
 
-* explains doubts clearly and quickly
-* generates real quizzes, not random questions
-* tracks my learning progress topic-wise
-* suggests what to revise next — based on how i’m actually performing
 
-so calls the need for **exam whisperer**.
+
+---
+
+💭 why build this?
+
+existing llm tools just answer questions — they don’t help you learn.
+
+whisper was born out of this frustration. when you're actually revising, you need something that:
+
+explains doubts cleanly
+
+asks meaningful quizzes
+
+tracks performance by topic
+
+recommends what to revise next
+
+
 
 ---
 
 ## what it does
 
-* **ask anything**: get clean, concise and student-level explanations for any topic
-* **quiz mode**: generate topic-based mcqs or short-answer questions
-* **learning tracker**: see where you're improving, and where you’re still weak
-* **voice optional**: speak your question and hear the answer (via whisper)
+`/ask` → get clean, concise explanations (via llm)
+
+`/quiz` → generate topic-based mcqs or short-answer sets
+
+`/answer` → log your attempts and compute your scores
+
+`/progress` → see topic-wise mastery in real time
+
+`voice` ![] → speak your doubts and hear responses via whisper
+
+
 
 ---
 
-## how it works
+⚙ how it works
 
-### backend stack
+backend stack
 
-* `fastapi` – main api framework
-* `pathway` – real-time dataflow engine for tracking topic performance
-* `openai` or `ollama` – for explanation + quiz generation
-* `postgres` – stores question attempts + user logs
+fastapi — lightweight api framework
 
-### optional modules
+pathway — stream-based engine for real-time learning analytics
 
-* `whisper` – for speech-to-text
+openai or ollama — for answers + quizzes
 
----
+postgres — stores user attempts, logs, and trends
 
-## how adaptive feedback works
 
-every quiz you take or question you ask gets streamed to `pathway`, which:
+optional modules
 
-* updates your score trends per topic
-* detects weak areas and improvement patterns
-* lets the app adapt and suggest what to revise next
+whisper — convert voice input to text
 
-**example:**
+tts — read out responses to the user
 
-> you take 3 quizzes in modern physics → 40%, 60%, 70%
->
-> pathway shows trend: 📉 improving, but not yet mastered
->
-> app suggests: “review photoelectric effect again”
+
 
 ---
 
-## file structure
+📊 adaptive feedback
 
-```
-exam_whisperer/
-├── main.py                # fastapi app entry
-├── routes/
-│   ├── ask.py            # /ask endpoint → explanation
-│   ├── quiz.py           # /quiz, /answer
-│   └── progress.py       # /progress → learning stats
-├── services/
-│   ├── llm.py            # openai/ollama prompt logic
-│   └── tracker.py        # sends events to pathway
-├── pathway_flow.py       # runs topic mastery tracking
-├── models.py             # pydantic schemas
-├── db.py                 # database init + access
-├── utils.py              # quiz scoring etc
-├── voice_modules/        # optional voice features
-│   ├── stt.py            # whisper module
-│   └── tts.py            # text-to-speech (optional)
-├── requirements.txt      # all deps
-└── readme.md             # you're reading it
-```
+all your actions stream into pathway, which updates your learning model:
+
+computes trends (e.g. score improvement, stagnation)
+
+flags weak spots automatically
+
+recommends next-best topics to revise
+
+
+example:
+
+> quiz attempts in vectors → scores: 40%, 60%, 70%
+→ not mastered yet, app suggests: “revise dot product again”
+
+
+
 
 ---
 
-## api endpoints
+📂 file structure
 
-| method | endpoint    | description                       |
-| ------ | ----------- | --------------------------------- |
-| post   | `/ask`      | ask any concept-based question    |
-| post   | `/quiz`     | generate quiz by topic/difficulty |
-| post   | `/answer`   | submit answers, log performance   |
-| get    | `/progress` | see topic-wise mastery            |
+backend/
+├── main.py                  # fastapi entrypoint
+├── routes/                  # api endpoints
+│   ├── ask.py
+│   ├── quiz.py
+│   └── progress.py
+├── services/                # core logic
+│   ├── llm.py               # model prompt formatting
+│   └── tracker.py           # stream updates to pathway
+├── pathway_flow/
+│   └── topic_flow.py        # pathway app (runs separately)
+├── models.py                # pydantic schemas
+├── db.py                    # db session + init
+├── utils.py                 # misc utils (e.g., scoring)
+├── voice_modules/
+│   ├── stt.py               # whisper-based voice input
+│   └── tts.py               # optional voice output
+├── cli/
+│   └── main.py              # whispercli interface
+├── requirements.txt
+└── readme.md                # this file
 
----
-
-## setup
-
-```bash
-git clone https://github.com/ryu-ryuk/exam-whisperer
-cd exam-whisperer
-uv venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-(optional) to run pathway in a separate process:
-
-```bash
-python pathway_flow.py
-```
 
 ---
 
-## todo
+🧪 testing
 
-* [ ] leaderboard of students (gamified)
-* [ ] spaced repetition suggestion engine
-* [ ] frontend
+api docs: http://localhost:8000/docs
+
 
 ---
 
-## license
+🌐 api endpoints
 
+method	endpoint	description
+
+POST	/ask	ask anything, get explanation
+POST	/quiz	get a quiz on a given topic
+POST	/answer	submit answers and track score
+GET	/progress	topic-wise performance stats
+
+
+
+---
+
+🧱 docker setup (optional)
+
+if you're deploying:
+
+docker compose up --build
+
+add ENV vars in .env:
+
+SERVER_PORT=8000
+POSTGRES_USER=dev
+POSTGRES_PASSWORD=dev
+POSTGRES_DB=dev
+
+open port 8000 on your vm or reverse proxy via traefik/nginx.
+
+
+---
+
+🔮 todo
+
+[ ] frontend (vite/next)
+
+[ ] gamified leaderboard (ranked students)
+
+[ ] spaced repetition engine
+
+
+
+---
+
+📜 license
+
+MIT — built with ♥ by zen
