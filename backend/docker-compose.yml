@@ -1,20 +1,27 @@
 services:
-  backend:
+  exam-whisperer:
     container_name: exam-whisperer
     build:
       context: ./
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
-    volumes:
-      - ./:/app
-    networks:
-      - ew-net
+    restart: unless-stopped
     env_file:
       - .env
-    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8000
+    volumes:
+      - ./:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whisper-api.rule=Host(`whisper.alokranjan.me`)"
+      - "traefik.http.routers.whisper-api.entrypoints=websecure"
+      - "traefik.http.routers.whisper-api.tls=true"
+      - "traefik.http.routers.whisper-api.service=exam-whisperer"
+      - "traefik.http.services.exam-whisperer.loadbalancer.server.port=8000"
+    networks:
+      - web
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:15
@@ -26,14 +33,12 @@ services:
       POSTGRES_PASSWORD: dev
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
-      - ew-net
+      - web
+
+networks:
+  web:
+    external: true  # tfk
 
 volumes:
   pgdata:
-
-networks:
-  ew-net:
-    driver: bridge
