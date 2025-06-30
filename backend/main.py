@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
-from routes import ask, quiz, progress, reminders, syllabus, upload
+from routes import ask, quiz, progress, reminders, syllabus, upload, topics
 import threading
 from src.services.jsonl_uploader import run_uploader
 
@@ -28,6 +28,7 @@ app.include_router(progress.router)
 app.include_router(reminders.router)
 app.include_router(syllabus.router)  # opt for now 
 app.include_router(upload.router)  
+app.include_router(topics.router)
 # app.include_router(voices.router)
 
 from fastapi.middleware.cors import CORSMiddleware
