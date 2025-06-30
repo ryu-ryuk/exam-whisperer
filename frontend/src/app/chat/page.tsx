@@ -63,26 +63,24 @@ export default function ChatPage() {
   // Replace with real user id logic
   const userId = "demo-user"
 
-  // Show topic modal only if not already selected in this session and no topic is set
+  // Show topic modal if no topic is selected
   useEffect(() => {
     setTopicsLoading(true)
     getUserTopics(userId)
       .then((topics) => {
         setUserTopics(topics)
-        const topicFlag = sessionStorage.getItem(`topicSelected_${userId}`)
-        if (topics.length > 0 && !topicFlag && !userTopic) setTopicModalOpen(true)
+        if (topics.length > 0 && !userTopic) setTopicModalOpen(true)
       })
       .catch((err) => setTopicsError(err.message || "Failed to load topics"))
       .finally(() => setTopicsLoading(false))
   }, [userId, userTopic])
 
-  // When topic is selected, set session flag and close modal
+  // When topic is selected, close modal
   useEffect(() => {
     if (userTopic) {
-      sessionStorage.setItem(`topicSelected_${userId}`, "1")
       setTopicModalOpen(false)
     }
-  }, [userTopic, userId])
+  }, [userTopic])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
