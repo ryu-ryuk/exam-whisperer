@@ -40,4 +40,3 @@ async def stream_content_event(user_id: str, topic: str, content: str):
             "timestamp": timestamp
         }))
         f.write("\n")
-   
