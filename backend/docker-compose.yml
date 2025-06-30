@@ -11,6 +11,7 @@ services:
       SERVER_PORT: 8000
     volumes:
       - ./:/app
+      - /mnt/extra/uv-cache:/root/.cache/uv
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.whisper-api.rule=Host(`whisper.alokranjan.me`)"
@@ -38,7 +39,7 @@ services:
 
 networks:
   web:
-    external: true  # tfk
+    external: true
 
 volumes:
   pgdata:
