@@ -1,5 +1,5 @@
 APP_NAME=exam-whisperer
-DOCKER_COMPOSE=docker-compose
+DOCKER_COMPOSE=docker compose
 
 # start the containers
 up:
