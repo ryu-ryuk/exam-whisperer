@@ -74,4 +74,10 @@ export async function quizEvaluate({ user_id, topic, question_index, user_answer
   return res.json();
 }
 
+export async function getUserTopics(userId: string): Promise<string[]> {
+  const res = await fetch(`${BASE_URL}/topics/${encodeURIComponent(userId)}`);
+  if (!res.ok) throw new Error("Failed to fetch topics");
+  return res.json();
+}
+
 // Add more functions for other endpoints as needed

@@ -11,6 +11,7 @@ import Link from "next/link"
 import { askAnything } from "@/lib/api"
 import { uploadSyllabus } from "@/lib/api-syllabus"
 import QuizModal from "@/components/QuizModal"
+import { getUserTopics } from "@/lib/api"
 
 interface Message {
   id: string
@@ -50,6 +51,38 @@ export default function ChatPage() {
   // Quiz state
   const [quizActive, setQuizActive] = useState(false)
   const [userTopic, setUserTopic] = useState("")
+
+  // Topics state
+  const [userTopics, setUserTopics] = useState<string[]>([])
+  const [topicsLoading, setTopicsLoading] = useState(false)
+  const [topicsError, setTopicsError] = useState<string | null>(null)
+
+  // Modal state for topic selection
+  const [topicModalOpen, setTopicModalOpen] = useState(false)
+
+  // Replace with real user id logic
+  const userId = "demo-user"
+
+  // Show topic modal only if not already selected in this session and no topic is set
+  useEffect(() => {
+    setTopicsLoading(true)
+    getUserTopics(userId)
+      .then((topics) => {
+        setUserTopics(topics)
+        const topicFlag = sessionStorage.getItem(`topicSelected_${userId}`)
+        if (topics.length > 0 && !topicFlag && !userTopic) setTopicModalOpen(true)
+      })
+      .catch((err) => setTopicsError(err.message || "Failed to load topics"))
+      .finally(() => setTopicsLoading(false))
+  }, [userId, userTopic])
+
+  // When topic is selected, set session flag and close modal
+  useEffect(() => {
+    if (userTopic) {
+      sessionStorage.setItem(`topicSelected_${userId}`, "1")
+      setTopicModalOpen(false)
+    }
+  }, [userTopic, userId])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -191,8 +224,58 @@ export default function ChatPage() {
     ])
   }
 
+  // Simple Modal for topic selection
+  function TopicModal({ open, children }: { open: boolean, children: React.ReactNode }) {
+    if (!open) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        <div className="bg-slate-900 border border-purple-700 rounded-lg shadow-lg p-8 min-w-[320px] max-w-full">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+      {/* Topic Selection Modal */}
+      <TopicModal open={topicModalOpen}>
+        <div className="mb-4 text-xl font-bold text-white">Select a Topic</div>
+        {topicsLoading ? (
+          <div className="text-white">Loading topics...</div>
+        ) : userTopics.length > 0 ? (
+          <select
+            className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+            value={userTopic}
+            onChange={e => setUserTopic(e.target.value)}
+          >
+            <option value="">Select a topic</option>
+            {userTopics.map((topic) => (
+              <option key={topic} value={topic}>{topic}</option>
+            ))}
+            <option value="__custom__">Other (type manually)</option>
+          </select>
+        ) : (
+          <input
+            className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+            placeholder="Enter custom topic"
+            value={userTopic}
+            onChange={e => setUserTopic(e.target.value)}
+          />
+        )}
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={() => {
+              if (userTopic) setTopicModalOpen(false)
+            }}
+            disabled={!userTopic}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            Confirm
+          </Button>
+        </div>
+      </TopicModal>
+
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4">
         <div className="container mx-auto flex items-center justify-between">
@@ -311,24 +394,57 @@ export default function ChatPage() {
                 variant="outline"
                 className="bg-purple-700 text-white border-purple-400 hover:bg-purple-800"
                 onClick={() => setQuizActive(true)}
+                disabled={topicModalOpen}
               >
                 📝 Take a Quiz
               </Button>
             </div>
           )}
-          {/* Hide chat input if quiz is active */}
-          {!quizActive && (
+          {/* Hide chat input if quiz is active or topic modal is open */}
+          {!quizActive && !topicModalOpen && (
             <form onSubmit={handleSubmit} className="flex items-end space-x-4">
               <div className="flex-1 relative">
                 {/* Topic selector */}
                 <div className="mb-2 flex items-center gap-2">
                   <span className="text-white text-sm font-semibold bg-purple-800 px-2 py-1 rounded-l">Topic</span>
-                  <input
-                    className="border border-purple-500 bg-slate-900 text-white p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
-                    placeholder="Set topic (e.g. Paleontology)"
-                    value={userTopic}
-                    onChange={e => setUserTopic(e.target.value)}
-                  />
+                  {topicsLoading ? (
+                    <span className="text-white">Loading topics...</span>
+                  ) : userTopics.length > 0 && userTopic !== "__custom__" ? (
+                    <>
+                      <select
+                        className="border border-purple-500 bg-slate-900 text-white p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+                        value={userTopic}
+                        onChange={e => {
+                          if (e.target.value === "__custom__") {
+                            setUserTopic("");
+                          } else {
+                            setUserTopic(e.target.value);
+                          }
+                        }}
+                      >
+                        <option value="">Select a topic</option>
+                        {userTopics.map((topic) => (
+                          <option key={topic} value={topic}>{topic}</option>
+                        ))}
+                        <option value="__custom__">Other (type manually)</option>
+                      </select>
+                      {userTopic === "__custom__" && (
+                        <input
+                          className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px] ml-2"
+                          placeholder="Enter custom topic"
+                          value={userTopic === "__custom__" ? "" : userTopic}
+                          onChange={e => setUserTopic(e.target.value)}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      className="border border-purple-500 bg-slate-900 text-white p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+                      placeholder="Set topic (e.g. Paleontology)"
+                      value={userTopic}
+                      onChange={e => setUserTopic(e.target.value)}
+                    />
+                  )}
                 </div>
                 <textarea
                   ref={inputRef}
