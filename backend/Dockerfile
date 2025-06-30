@@ -23,7 +23,8 @@ COPY pyproject.toml uv.lock /app/
 COPY src /app/src
 COPY data /app/data
 
-RUN uv sync
+# RUN uv sync
+RUN uv pip install --no-cache-dir .
 
 # copy source
 COPY . /app
