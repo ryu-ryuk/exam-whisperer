@@ -27,7 +27,7 @@
   <img src="https://img.shields.io/badge/FastAPI-Backend-89b4fa?style=for-the-badge&logo=fastapi&logoColor=white&colorA=1e1e2e" />
   <img src="https://img.shields.io/badge/PostgreSQL-DB-b4befe?style=for-the-badge&logo=postgresql&logoColor=white&colorA=1e1e2e" />
   <img src="https://img.shields.io/badge/Pathway-Real_Time-cba6f7?style=for-the-badge&logo=databricks&logoColor=white&colorA=1e1e2e" />
-  <img src="https://img.shields.io/badge/LLM-OpenAI/Ollama-74c7ec?style=for-the-badge&logo=openai&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/LLM-OpenAI/Ollama/Gemini-74c7ec?style=for-the-badge&logo=openai&logoColor=white&colorA=1e1e2e" />
 <!--   <img src="https://img.shields.io/badge/Speech-Whisper+TTS-f38ba8?style=for-the-badge&logo=voicemod&logoColor=white&colorA=1e1e2e" /> -->
 </p>
 
