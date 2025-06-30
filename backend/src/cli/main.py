@@ -125,7 +125,7 @@ class WhisperCLI(App):
                     try:
                         async with httpx.AsyncClient() as client:
                             submit_res = await client.post(
-                                f"{API_URL}/answer",
+                                f"{API_URL}/quiz/evaluate",
                                 json={
                                     "user_id": self.user_id,
                                     "topic": self.topic,
@@ -152,7 +152,7 @@ class WhisperCLI(App):
             try:
                 async with httpx.AsyncClient() as client:
                     quiz_res = await client.post(
-                        f"{API_URL}/quiz",
+                        f"{API_URL}/quiz/ask",
                         json={
                             "user_id": self.user_id,
                             "topic": self.topic,
@@ -177,7 +177,7 @@ class WhisperCLI(App):
         try:
             async with httpx.AsyncClient() as client:
                 res = await client.post(
-                    f"{API_URL}/ask",
+                    f"{API_URL}/explain",
                     json={"user_id": self.user_id, "question": question}
                 )
                 data = res.json()

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, UploadFile, Form
 from services.parser import parse_pdf_topics
+from pathway_flow.stream import stream_content_event
 from db import SessionLocal
 from db_models import UserSyllabus
 import tempfile, os, json
-
+import asyncio
 router = APIRouter()
 
 def get_user_syllabus(user_id: str) -> list[str]:
@@ -14,15 +15,12 @@ def get_user_syllabus(user_id: str) -> list[str]:
         return json.loads(record.topics_text)
     return []
 
-
 @router.post("/syllabus")
 async def upload_syllabus(pdf: UploadFile, user_id: str = Form(...)):
-    # save file
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         tmp.write(await pdf.read())
         tmp_path = tmp.name
 
-    # extract topics
     topics = await parse_pdf_topics(tmp_path)
     os.remove(tmp_path)
 
@@ -35,5 +33,11 @@ async def upload_syllabus(pdf: UploadFile, user_id: str = Form(...)):
         db.add(UserSyllabus(user_id=user_id, topics_text=json.dumps(topics)))
     db.commit()
     db.close()
+
+    # stream placeholder content to pathway
+# stream all topics and content to Pathway
+    for t in topics:
+        if isinstance(t, dict) and "topic" in t and "content" in t:
+            await stream_content_event(user_id, t["topic"], t["content"])
 
     return {"topics": topics}

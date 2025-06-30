@@ -7,6 +7,14 @@ async def parse_pdf_topics(file_path: str) -> list[str]:
     """extract topics from a syllabus or textbook PDF using LLM"""
     doc = fitz.open(file_path)
     text_chunks = []
+    import re
+
+    def clean_llm_json(raw: str) -> str:
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = re.sub(r"^```[a-zA-Z]*\n?", "", raw)
+            raw = re.sub(r"\n?```$", "", raw)
+        return raw
 
     for i, page in enumerate(doc):
         if i >= 5:
@@ -22,29 +30,32 @@ async def parse_pdf_topics(file_path: str) -> list[str]:
         return []
 
     prompt = (
-        "The following is a university syllabus or textbook extract.\n"
-        "Extract a list of 10–20 major academic **topics** or **sections** covered.\n"
-        "Respond ONLY as a valid JSON list of strings like:\n"
-        "[\"Data Structures\", \"TCP/IP\", \"Docker\", \"AWS\"]\n\n"
+        "You are an academic content parser.\n"
+        "Extract a list of major academic topics from the following text. For each topic, include a short summary or syllabus-style description.\n"
+        "The topics should be suitable for a university syllabus or textbook.\n"
+        "Return only valid JSON in this format:\n"
+        '[{"topic": "Docker", "content": "A platform used for containerizing applications and managing their deployment."}, ...]\n'
+        "If no topics are found, return an empty list.\n\n"
         f"{full_text}"
     )
 
 
-    try:
-        raw = (await _call_llm(prompt)).strip()
 
+    try:
+        raw = clean_llm_json(await _call_llm(prompt))
         if raw.startswith("```"):
             import re
             raw = re.sub(r"^```[a-zA-Z]*\n?", "", raw).strip()
             raw = re.sub(r"\n?```$", "", raw).strip()
 
-        try:
-            topics = json.loads(raw)
-            if isinstance(topics, list):
-                return [t.strip() for t in topics if isinstance(t, str)]
-        except json.JSONDecodeError:
-            print("⚠️ LLM did not return valid JSON, trying fallback")
 
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list) and all("topic" in x and "content" in x for x in parsed):
+                return parsed
+        except json.JSONDecodeError:
+            print("⚠️ LLM did not return valid JSON, fallback to topic list")
+            
             # fallback: split on line or commas
             lines = raw.split("\n")
             candidates = [l.strip() for l in lines if l.strip()]

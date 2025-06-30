@@ -18,24 +18,6 @@ from cachetools import TTLCache
 
 from omnidimension import Client
 
-# init omnidimension client
-
-
-# from omnidimension import Client
-
-# init omnidimension client
-# OMNIDIM_API_KEY = os.getenv("OMNIDIM_API_KEY")
-# OMNIDIM_AGENT_ID = os.getenv("OMNIDIM_AGENT_ID")
-
-# try:
-#     if OMNIDIM_API_KEY:
-#         from omnidimension import Client
-#         omnidim_client = Client(OMNIDIM_API_KEY)
-#     else:
-#         omnidim_client = None
-# except ImportError:
-#     omnidim_client = None
-
 # exception class 
 class VoiceProcessingError(Exception):
     pass
@@ -57,53 +39,6 @@ cache = TTLCache(maxsize=256, ttl=600)
 class LLMProviderError(Exception):
     pass
 session_context = TTLCache(maxsize=1000, ttl=1800)
-
-# Omnidimension agent setup
-# OMNIDIM_AGENT_ID = os.getenv("OMNIDIM_AGENT_ID")
-
-# if OMNIDIM_API_KEY and not OMNIDIM_AGENT_ID:
-    # Create the agent on startup if not already created
-    # agent_response = omnidim_client.agent.create(
-    #     name="Exam Whisperer Helper",
-    #     welcome_message="""Hi there, how can I help you today?""",
-    #     context_breakdown=[
-    #         {"title": "Greeting and Inquiry", "body": """ Begin with a friendly and warm greeting. Ask the student which exam topic they would like tips on today. Example: 'Hi, this is your Exam Whisperer Helper. What exam topic are you focusing on today?' """, "is_enabled": False},
-    #         {"title": "Deliver Exam Tips", "body": """ Once the student mentions a topic [exam_topic], mention no gibberish or fluff! Proceed to read the pre-defined text prompt clearly and naturally. """, "is_enabled": True},
-    #         {"title": "Post-Information Engagement", "body": "", "is_enabled": False}
-    #     ],
-    #     transcriber={
-    #         "provider": "deepgram_stream",
-    #         "silence_timeout_ms": 400,
-    #         "model": "nova-3",
-    #         "numerals": True,
-    #         "punctuate": True,
-    #         "smart_format": False,
-    #         "diarize": False
-    #     },
-    #     model={
-    #         "model": "gpt-4o-mini",
-    #         "temperature": 0.7
-    #     },
-    #     voice={
-    #         "provider": "eleven_labs",
-    #         "voice_id": "hT1MsRBLaHSXGeWzW6xF"
-    #     },
-    #     web_search={
-    #         "enabled": True,
-    #         "provider": "DuckDuckGo"
-    #     },
-    #     post_call_actions={
-    #         "email": {
-    #             "enabled": True,
-    #             "recipients": ["example@example.com"],
-    #             "include": ["summary", "extracted_variables"]
-    #         },
-    #         "extracted_variables": [
-    #             {"key": "exam_topic", "prompt": "Extract the exam topic the student is interested in receiving tips about."}
-    #         ]
-    #     },
-    # )
-    # OMNIDIM_AGENT_ID = agent_response['json'].get('id')
 
 # –– main explain api ––
 async def explain_concept(question: str, user_id: str, topic: str) -> dict:
@@ -130,14 +65,17 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
         prompt_parts.append(
             f"Previously, the user asked: '{prior_question}'. Use this as context if the current question depends on it.\n"
         )
+        ## dump context for prior question
     prompt_parts.extend([
         f"Current question: {question}",
         "",
-        "–– Use the student’s context below to tailor the explanation ––",
-        f"Context: {json.dumps(user_context, indent=2) or '[No context available]'}",
+        "You MUST use the following context to craft your explanation.",
+        "Only use external knowledge if the context is insufficient.",
+        f"Context:\n{json.dumps(user_context, indent=2) or '[No context available]'}",
         "",
         "Explain the concept clearly and concisely in 100-150 words."
     ])
+
     prompt = "\n".join(prompt_parts)
     logging.info(f"[explain_concept] prompt: {prompt}")
 
@@ -187,6 +125,24 @@ async def explain_concept(question: str, user_id: str, topic: str) -> dict:
     except Exception as e:
         logging.exception(f"[explain_concept] Unexpected error: {e}")
         raise
+    
+async def llm_judge_score(question: str, correct_answer: str, user_answer: str, context: dict) -> float:
+    prompt = (
+        f"You're evaluating a student's MCQ answer.\n\n"
+        f"Question: {question}\n"
+        f"Correct answer: {correct_answer}\n"
+        f"User's answer: {user_answer}\n\n"
+        f"Student context:\n{json.dumps(context, indent=2)}\n\n"
+        f"Return a float between 0 and 1 indicating how close the user's answer is to the correct one.\n"
+        f"0 means completely wrong, 1 means correct, values like 0.4 mean partially correct or guessed.\n"
+        f"Respond ONLY with the score."
+    )
+    result = await _call_llm(prompt)
+    try:
+        return float(result.strip())
+    except Exception:
+        return 0.0  # fallback
+
 
 # –– related topics ––
 async def suggest_related_topics(topic: str, user_id: str) -> list[str]:

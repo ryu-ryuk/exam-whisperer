@@ -18,7 +18,7 @@ from db_models import UserTopicActivity, UserTopicProgress
 
 LATEST_KB = Path("data/latest_content.jsonl")
 TOPIC_ATTEMPTS = Path("data/topic_attempts.jsonl")
-TOPIC_MASTERY = Path("data/topic_mastery.jsonl")
+TOPIC_MASTERY = Path("data/user_topic_progress.jsonl")
 
 # --- update topic progress (postgres + pathway) ---
 async def update_topic_stats(user_id: str, topic: str, score: float, source: str = "quiz"):
@@ -117,41 +117,88 @@ def _infer_mastery(score: float) -> str:
 #     }
 
 # --- build full LLM context: notes + history + preferences ---
+# def get_user_context(user_id: str, topic: str) -> dict:
+#     """builds user context for LLM: notes, past performance, preferences"""
+#     context = {"notes": "", "quiz_history": [], "preferences": {}}
+#
+#     # from LATEST_KB
+#     if LATEST_KB.exists():
+#         with LATEST_KB.open(encoding="utf-8") as f:
+#             for line in f:
+#                 rec = json.loads(line)
+#                 if rec["user_id"] == user_id:
+#                     if rec.get("type") == "notes" and rec.get("topic") == topic:
+#                         context["notes"] = rec.get("content", "")
+#                     elif rec.get("type") == "quiz_history" and rec.get("topic") == topic:
+#                         context["quiz_history"].append(rec.get("performance", {}))
+#                     elif rec.get("type") == "preferences":
+#                         context["preferences"] = rec.get("preferences", {})
+#
+#     # from topic_attempts
+#     if TOPIC_ATTEMPTS.exists():
+#         with TOPIC_ATTEMPTS.open(encoding="utf-8") as f:
+#             for line in f:
+#                 rec = json.loads(line)
+#                 if rec["user_id"] == user_id and rec.get("topic") == topic:
+#                     context["quiz_history"].append(rec.get("performance", {}))
+#
+#     # from topic_mastery (stream output)
+#     if TOPIC_MASTERY.exists():
+#         with TOPIC_MASTERY.open(encoding="utf-8") as f:
+#             for line in f:
+#                 rec = json.loads(line)
+#                 if rec["user_id"] == user_id and rec.get("topic") == topic:
+#                     context["preferences"]["mastery_level"] = rec.get("mastery", "beginner")
+#
+#     return context
+#
 def get_user_context(user_id: str, topic: str) -> dict:
-    """builds user context for LLM: notes, past performance, preferences"""
-    context = {"notes": "", "quiz_history": [], "preferences": {}}
+    context = {
+        "notes": "",
+        "quiz_history": [],
+        "preferences": {}
+    }
 
-    # from LATEST_KB
+    # read notes from latest_content
     if LATEST_KB.exists():
         with LATEST_KB.open(encoding="utf-8") as f:
             for line in f:
                 rec = json.loads(line)
-                if rec["user_id"] == user_id:
-                    if rec.get("type") == "notes" and rec.get("topic") == topic:
-                        context["notes"] = rec.get("content", "")
-                    elif rec.get("type") == "quiz_history" and rec.get("topic") == topic:
-                        context["quiz_history"].append(rec.get("performance", {}))
-                    elif rec.get("type") == "preferences":
-                        context["preferences"] = rec.get("preferences", {})
+                if rec["user_id"] == user_id and rec.get("topic") == topic:
+                    if "content" in rec:
+                        context["notes"] = rec["content"]
+                        break
 
-    # from topic_attempts
+    # read quiz history from topic_attempts
     if TOPIC_ATTEMPTS.exists():
         with TOPIC_ATTEMPTS.open(encoding="utf-8") as f:
             for line in f:
                 rec = json.loads(line)
                 if rec["user_id"] == user_id and rec.get("topic") == topic:
-                    context["quiz_history"].append(rec.get("performance", {}))
+                    if "performance" in rec:
+                        context["quiz_history"].append(rec["performance"])
+                    elif "score" in rec:
+                        context["quiz_history"].append({
+                            "score": rec["score"],
+                            "timestamp": rec.get("timestamp", "")
+                        })
 
-    # from topic_mastery (stream output)
+    # read preferences from topic_mastery
     if TOPIC_MASTERY.exists():
         with TOPIC_MASTERY.open(encoding="utf-8") as f:
             for line in f:
                 rec = json.loads(line)
                 if rec["user_id"] == user_id and rec.get("topic") == topic:
-                    context["preferences"]["mastery_level"] = rec.get("mastery", "beginner")
+                    mastery = rec.get("mastery", "beginner")
+                    context["preferences"]["mastery_level"] = mastery
+
+                    # related topic suggestions
+                    if mastery == "weak":
+                        context["preferences"]["related_topics"] = rec.get("related_topics", [])
+                    break
+
 
     return context
-
 
 
 def get_user_progress_from_pathway(user_id: str):

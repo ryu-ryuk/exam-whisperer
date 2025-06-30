@@ -3,6 +3,7 @@ import json
 import logging
 from pathlib import Path
 from cachetools import TTLCache
+from services.llm import llm_judge_score
 
 from services.tracker import get_user_context
 from pathway_flow.stream import stream_topic_event
@@ -135,8 +136,13 @@ async def evaluate_quiz_answer(
                     "correct_answer": correct_answer
                 }
             }) + "\n")
-        # log to Pathway for real-time adaptation
-        score = 1.0 if user_answer == correct_answer else 0.0
+        # log to Pathway using LLM-judged score
+        score = await llm_judge_score(
+            question=question["text"],
+            correct_answer=options[correct_answer],
+            user_answer=options[user_answer],
+            context=user_context
+        )
         stream_topic_event(user_id, topic, score)
         return {
             "correct": user_answer == correct_answer,

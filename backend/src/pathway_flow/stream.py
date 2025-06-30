@@ -3,7 +3,7 @@ import json
 import os
 
 
-def stream_topic_event(user_id: str, topic: str, score: float):
+async def stream_topic_event(user_id: str, topic: str, score: float):
     log_path = "data/topic_attempts.jsonl"
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
@@ -20,7 +20,7 @@ def stream_topic_event(user_id: str, topic: str, score: float):
         f.write("\n")
 
 
-def stream_content_event(user_id: str, topic: str, content: str):
+async def stream_content_event(user_id: str, topic: str, content: str):
     log_path = "data/content_updates.jsonl"
     # ensure the folder exists
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
