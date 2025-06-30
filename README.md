@@ -111,7 +111,7 @@ example:
 ---
 
 📂 file structure
-
+```
 backend/
 ├── main.py                  # fastapi entrypoint
 ├── routes/                  # api endpoints
@@ -133,7 +133,7 @@ backend/
 │   └── main.py              # whispercli interface
 ├── requirements.txt
 └── readme.md                # this file
-
+```
 
 ---
 
