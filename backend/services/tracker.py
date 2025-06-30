@@ -40,6 +40,7 @@ async def update_topic_stats(user_id: str, topic: str, score: float, source: str
 
 async def log_topic_attempt(user_id: str, topic: str, score: float = 0.3, source: str = "ask"):
     # score is now configurable; default 0.3 for ask, real score for quiz
+    stream_topic_event(user_id, topic, score) 
     await update_topic_stats(user_id, topic, score=score, source=source)
 
 # --- fetch full progress for user ---

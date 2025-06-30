@@ -1,21 +1,52 @@
 """
 handles the /progress endpoint.
 
-- fetches user’s topic-wise performance
+- fetches user’s topic-wise performance from JSONL
 - returns mastery level, improvement trends, and last interaction
 """
 from fastapi import APIRouter, HTTPException
-from services.tracker import get_user_progress_from_db
-from models import ProgressResponse
+from typing import List
+import json
+
+from models import TopicProgress, OverallProgress
 
 router = APIRouter()
 
+@router.get("/progress/{user_id}", response_model=OverallProgress)
+def get_user_progress(user_id: str):
+    # 1) Load and filter the JSONL file
+    user_records = []
+    try:
+        with open("data/user_topic_progress.jsonl", "r") as f:
+            for line in f:
+                rec = json.loads(line)
+                if rec.get("user_id") == user_id:
+                    user_records.append(rec)
+    except FileNotFoundError:
+        raise HTTPException(status_code=503, detail="Progress data not available")
 
+    if not user_records:
+        raise HTTPException(status_code=404, detail="User progress not found")
 
-@router.get("/progress", response_model=ProgressResponse)
-async def get_progress(user_id: str):
-    data = get_user_progress_from_db(user_id)
-    if data["topics"] == []:
-        raise HTTPException(status_code=404, detail="No progress found")
-        pass
-    return data
+    # 2) Compute overall_score
+    total_score = sum(r["latest_score"] for r in user_records)
+    overall_score = total_score / len(user_records)
+
+    # 3) Build per-topic list
+    topics: List[TopicProgress] = []
+    for r in user_records:
+        topics.append(TopicProgress(
+            topic         = r["topic"],
+            latest_score  = r["latest_score"],
+            average_score = r["average_score"],
+            trend         = r["trend"],
+            status        = r["status"],
+            last_attempt  = r["last_attempt"],
+        ))
+
+    return OverallProgress(
+        user_id       = user_id,
+        overall_score = overall_score,
+        topics        = topics,
+    )
+

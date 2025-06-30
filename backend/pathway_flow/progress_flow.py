@@ -1,9 +1,4 @@
-# pathway_flow/progress_flow.py
-
-import os
-from pathlib import Path
 import pathway as pw
-
 
 class AttemptSchema(pw.Schema):
     user_id: str
@@ -11,56 +6,78 @@ class AttemptSchema(pw.Schema):
     score: float
     timestamp: pw.DateTimeUtc
 
-# 2) Read the append‑only JSONL of quiz attempts
+# 1) Read attempts
 attempts = pw.io.jsonlines.read(
-    path= "data/topic_attempts.jsonl",
+    path="data/topic_attempts.jsonl",
     schema=AttemptSchema,
 )
 
-# 3) Compute per-user+topic aggregates:
-#    - latest_score: the score at the maximum timestamp
-#    - average_score: mean score across all attempts
-#    - last_attempt: the maximum timestamp
-aggregated = (
+# 2) Compute last_attempt (max timestamp) per (user_id, topic)
+last_ts = (
     attempts
     .groupby(attempts.user_id, attempts.topic)
     .reduce(
-        user_id=pw.this.user_id,
-        topic=pw.this.topic,
-        average_score=pw.reducers.avg(attempts.score),
-        last_attempt=pw.reducers.max(attempts.timestamp),
-        # pw.argmax gives the index of the max timestamp; use it to pick the score
-        latest_score=pw.reducers.latest(
-            attempts.score,
-            order_by=attempts.timestamp
+        user_id      = pw.this.user_id,
+        topic        = pw.this.topic,
+        last_attempt = pw.reducers.max(attempts.timestamp),
+    )
+)
+
+# 3) Join back to get the score at that timestamp
+latest_scores = (
+    attempts
+    .join(
+        last_ts,
+        attempts.user_id  == last_ts.user_id,
+        attempts.topic    == last_ts.topic,
+        attempts.timestamp== last_ts.last_attempt,
+    )
+    .select(
+        user_id      = attempts.user_id,
+        topic        = attempts.topic,
+        latest_score = attempts.score,
+        last_attempt = last_ts.last_attempt,
+    )
+)
+
+# 4) Compute average score per (user_id, topic)
+average_scores = (
+    attempts
+    .groupby(attempts.user_id, attempts.topic)
+    .reduce(
+        user_id       = pw.this.user_id,
+        topic         = pw.this.topic,
+        average_score = pw.reducers.avg(attempts.score),
+    )
+)
+
+# 5) Join latest & average, then derive trend/status
+progress = (
+    latest_scores
+    .join(
+        average_scores,
+        latest_scores.user_id == average_scores.user_id,
+        latest_scores.topic   == average_scores.topic,
+    )
+    .select(
+        user_id       = latest_scores.user_id,
+        topic         = latest_scores.topic,
+        latest_score  = latest_scores.latest_score,
+        average_score = average_scores.average_score,
+        last_attempt  = latest_scores.last_attempt,
+        trend         = pw.apply(
+            lambda l, a: "improving" if l > a else ("declining" if l < a else "steady"),
+            latest_scores.latest_score,
+            average_scores.average_score
+        ),
+        status        = pw.apply(
+            lambda s: "mastered" if s >= 0.8 else ("learning" if s >= 0.5 else "weak"),
+            latest_scores.latest_score
         )
     )
 )
 
-# 4) Enrich with trend and status
-progress = aggregated.select(
-    user_id       = pw.this.user_id,
-    topic         = pw.this.topic,
-    latest_score  = pw.this.latest_score,
-    average_score = pw.this.average_score,
-    last_attempt  = pw.this.last_attempt,
-    trend = pw.case(
-        (pw.this.latest_score > pw.this.average_score, "improving"),
-        (pw.this.latest_score < pw.this.average_score, "declining"),
-        default="steady",
-    ),
-    status = pw.case(
-        (pw.this.latest_score >= 0.8, "mastered"),
-        (pw.this.latest_score >= 0.5, "learning"),
-        default="weak",
-    ),
-)
-
-# 5) Write the live progress view to JSONL
-pw.io.jsonlines.write(
-    progress,
-    filename="data/user_topic_progress.jsonl"
-)
-
-# 6) Run the streaming pipeline
+# 6) Write and run
+pw.io.jsonlines.write(progress, filename="data/user_topic_progress.jsonl")
 pw.run()
+

@@ -61,6 +61,19 @@ class ProgressResponse(BaseModel):
     user_id: str
     stats: List[TopicStat]
 
+class TopicProgress(BaseModel):
+    topic: str
+    latest_score: float
+    average_score: float
+    trend: str
+    status: str
+    last_attempt: datetime
+
+class OverallProgress(BaseModel):
+    user_id: str
+    overall_score: float
+    topics: list[TopicProgress]
+
 
 # ---------- /reminders ----------
 
