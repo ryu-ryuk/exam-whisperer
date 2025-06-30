@@ -12,12 +12,13 @@ from fastapi import FastAPI
 from routes import ask, quiz, progress, reminders, syllabus, upload, topics
 import threading
 from src.services.jsonl_uploader import run_uploader
-
+import os 
 app = FastAPI()
 from db import Base, engine
 from db_models import UserSyllabus, UserTopicActivity
 
 Base.metadata.create_all(bind=engine)
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "*")
 
 from fastapi.staticfiles import StaticFiles
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -35,7 +36,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change this to your frontend URL in production
+    allow_origins=[FRONTEND_ORIGIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
