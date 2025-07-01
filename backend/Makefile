@@ -3,12 +3,14 @@ DOCKER_COMPOSE=docker compose
 
 # start the containers
 up:
-	$(DOCKER_COMPOSE) up
+	$(DOCKER_COMPOSE) up --watch
 
 # stop the containers
 down:
 	$(DOCKER_COMPOSE) down
 
+build:
+	$(DOCKER_COMPOSE) build
 # rebuild image without cache
 rebuild:
 	$(DOCKER_COMPOSE) build 

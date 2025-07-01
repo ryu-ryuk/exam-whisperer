@@ -8,8 +8,14 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
-    volumes:
-      - ./:/app
+    develop:
+      watch:
+        - path: ./src/
+          action: sync
+          target: app/src/
+        - path: pyproject.toml
+          action: rebuild
+
     networks:
       - ew-net
     env_file:
