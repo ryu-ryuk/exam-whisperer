@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -117,9 +117,15 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
             setQuizLoading(false);
         }
     };
+    interface EvaluationResult {
+        correct: boolean;
+        feedback: string;
+        correct_answer: { index: number; text: string };
+        user_answer: { index: number; text: string };
+    }
 
     // State for answer details and next button
-    const [lastEval, setLastEval] = useState<any>(null);
+    const [lastEval, setLastEval] = useState<EvaluationResult | null>(null);
     const [showNextButton, setShowNextButton] = useState(false);
 
     // Handler for next question

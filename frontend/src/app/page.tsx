@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Brain, TrendingUp, Volume2, Sparkles, ArrowRight, CheckCircle } from "lucide-react"
-import { useEffect, useState } from "react"
+// import { useEffect, useState } from "react"
 
 export default function LandingPage() {
   return (
