@@ -20,9 +20,8 @@ ENV PATH="/root/.local/bin:$PATH"
 
 # copy and install dependencies via uv
 COPY pyproject.toml uv.lock /app/
-COPY src /app/src
-COPY data /app/data
 
+RUN mkdir -p /app/src /app/data
 # RUN uv sync
 RUN uv pip install --system --no-cache-dir .
 
@@ -31,4 +30,4 @@ COPY . /app
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
