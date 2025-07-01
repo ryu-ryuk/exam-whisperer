@@ -4,10 +4,6 @@
   <span style="color:#cdd6f4; font-size: 28px;">Whisper</span>
 </h1>
 
-<h6 align="center" style="color:#a6adc8; margin-top: -8px;">
-  a real-time, ai-powered revision assistant.
-</h6>
-
 <h6 align="center" style="color:#5c5f77; margin-top: -12px;">
   a real-time, ai-powered exam revision assistant.
 </h6>
