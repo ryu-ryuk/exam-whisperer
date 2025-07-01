@@ -24,7 +24,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
               <Brain className="h-5 w-5 text-[#1e1e2e]" />
             </div>
-            <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisperer</span>
+            <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisper</span>
           </div>
           <div className="hidden md:flex items-center space-x-8">
             <a href="#features" className="text-[#bac2de] hover:text-[#f9e2af] transition-colors text-sm font-medium">
@@ -327,7 +327,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center space-x-2 text-[#a6adc8] group-hover:text-[#cba6f7] transition-colors duration-300">
                     <Volume2 className="w-4 h-4 text-[#cba6f7] group-hover:animate-pulse" />
-                    <span className="text-sm">Powered by Whisper AI</span>
+                    <span className="text-sm">Powered by you and your choice of LLM</span>
                   </div>
                 </div>
               </CardContent>
@@ -342,17 +342,17 @@ export default function LandingPage() {
                 <span className="text-[#cba6f7]"> Answers</span>
               </h2>
               <p className="text-xl text-[#a6adc8] mb-8">
-                Listen to explanations with our advanced voice feature powered by Whisper AI. Perfect for auditory
-                learners or when you&apos;re on the go.
+                Listen to explanations with our advanced voice feature. Choose your preferred LLM and enjoy 
+                personalized audio responses. Perfect for auditory learners or when you&apos;re on the go.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
-                  <span className="text-[#a6adc8]">Natural voice synthesis</span>
+                  <span className="text-[#a6adc8]">Multiple LLM options</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
-                  <span className="text-[#a6adc8]">Adjustable playback speed</span>
+                  <span className="text-[#a6adc8]">Natural voice synthesis</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
@@ -407,6 +407,15 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+          
+          <div className="text-center mt-12">
+            <a href="/chat">
+              <Button className="bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe] px-8 py-3 text-lg font-medium hover:scale-105 hover:shadow-lg hover:shadow-[#cba6f7]/30 transition-all duration-300">
+                Get Started Now
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -432,15 +441,53 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-[#313244] bg-[#181825]">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
-                <Brain className="h-5 w-5 text-[#1e1e2e]" />
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div className="col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
+                  <Brain className="h-5 w-5 text-[#1e1e2e]" />
+                </div>
+                <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisper</span>
               </div>
-              <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisper</span>
+              <p className="text-[#a6adc8] text-sm max-w-md">
+                Your intelligent study companion that adapts to your learning style. 
+                Study smarter with personalized AI assistance.
+              </p>
             </div>
-            <p className="text-[#6c7086] text-sm">© 2025 Exam Whisper. All rights reserved.</p>
+            
+            <div>
+              <h4 className="text-[#cdd6f4] font-semibold mb-4">Features</h4>
+              <ul className="space-y-2 text-sm text-[#a6adc8]">
+                <li><a href="#ask-anything" className="hover:text-[#f9e2af] transition-colors">Ask Anything</a></li>
+                <li><a href="#quiz-mode" className="hover:text-[#f9e2af] transition-colors">Practice Quizzes</a></li>
+                <li><a href="#learning-tracker" className="hover:text-[#f9e2af] transition-colors">Progress Tracking</a></li>
+                <li><a href="#voice" className="hover:text-[#f9e2af] transition-colors">Voice Features</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-[#cdd6f4] font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm text-[#a6adc8]">
+                <li><a href="#how-it-works" className="hover:text-[#f9e2af] transition-colors">How it Works</a></li>
+                <li><a href="/chat" className="hover:text-[#f9e2af] transition-colors">Get Started</a></li>
+                <li><a href="#" className="hover:text-[#f9e2af] transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-[#f9e2af] transition-colors">Contact Us</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-[#313244] pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-[#6c7086] text-sm mb-4 md:mb-0">
+                © 2025 Exam Whisper. All rights reserved.
+              </p>
+              <div className="flex space-x-6 text-sm text-[#6c7086]">
+                <a href="#" className="hover:text-[#f9e2af] transition-colors">Privacy Policy</a>
+                <a href="#" className="hover:text-[#f9e2af] transition-colors">Terms of Service</a>
+                <a href="#" className="hover:text-[#f9e2af] transition-colors">Cookie Policy</a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
