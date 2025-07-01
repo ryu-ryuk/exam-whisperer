@@ -7,14 +7,6 @@ import { MessageCircle, Brain, TrendingUp, Volume2, Sparkles, ArrowRight, CheckC
 import { useEffect, useState } from "react"
 
 export default function LandingPage() {
-  const [scrollY, setScrollY] = useState(0)
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
   return (
     <div className="h-screen overflow-y-scroll bg-[#1e1e2e] text-[#cdd6f4] scroll-smooth snap-y snap-mandatory" style={{ scrollSnapType: 'y mandatory' }}>
       {/* Navigation */}
@@ -48,24 +40,24 @@ export default function LandingPage() {
           <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-[#89b4fa]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-[#a6e3a1]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-6 text-center space-y-8 relative z-10">
           <div className="inline-flex items-center space-x-2 bg-[#313244] px-4 py-2 rounded-full hover:bg-[#313244]/80 hover:scale-105 transition-all duration-300 group cursor-pointer">
             <Sparkles className="h-4 w-4 text-[#cba6f7] group-hover:animate-spin group-hover:text-[#b4befe] transition-all duration-300" />
             <span className="text-sm text-[#a6adc8] group-hover:text-[#cdd6f4] transition-colors duration-300">AI-powered studying</span>
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-bold text-[#cdd6f4] leading-tight group">
             <span className="inline-block hover:scale-105 hover:text-[#f9e2af] transition-all duration-300 cursor-default">Study smarter with</span>
             <br />
             <span className="text-[#cba6f7] inline-block hover:scale-110 hover:text-[#b4befe] transition-all duration-500 cursor-default hover:drop-shadow-lg">Exam Whisper</span>
           </h1>
-          
+
           <p className="text-xl text-[#a6adc8] max-w-2xl mx-auto leading-relaxed hover:text-[#cdd6f4] transition-colors duration-300 cursor-default">
-            Your intelligent study companion that adapts to your learning style. 
+            Your intelligent study companion that adapts to your learning style.
             Ask questions, practice with quizzes, and track your progress effortlessly.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href="/chat" className="group">
               <Button className="bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe] px-8 py-3 text-lg font-medium hover:scale-110 hover:shadow-2xl hover:shadow-[#cba6f7]/30 transition-all duration-300 group-hover:rotate-1">
@@ -77,7 +69,7 @@ export default function LandingPage() {
               See how it works
             </Button>
           </div>
-          
+
           {/* Floating elements */}
           <div className="absolute top-16 left-8 opacity-20 animate-bounce" style={{ animationDelay: '0.5s' }}>
             <Brain className="h-8 w-8 text-[#cba6f7]" />
@@ -342,7 +334,7 @@ export default function LandingPage() {
                 <span className="text-[#cba6f7]"> Answers</span>
               </h2>
               <p className="text-xl text-[#a6adc8] mb-8">
-                Listen to explanations with our advanced voice feature. Choose your preferred LLM and enjoy 
+                Listen to explanations with our advanced voice feature. Choose your preferred LLM and enjoy
                 personalized audio responses. Perfect for auditory learners or when you&apos;re on the go.
               </p>
               <div className="space-y-4">
@@ -375,7 +367,7 @@ export default function LandingPage() {
               Simple steps to transform your study experience
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center hover:scale-105 transition-transform duration-300 group">
               <div className="w-16 h-16 bg-[#cba6f7] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#b4befe] group-hover:shadow-lg group-hover:shadow-[#cba6f7]/20 transition-all duration-300">
@@ -386,7 +378,7 @@ export default function LandingPage() {
                 Simply type in any concept or topic you need help understanding
               </p>
             </div>
-            
+
             <div className="text-center hover:scale-105 transition-transform duration-300 group">
               <div className="w-16 h-16 bg-[#89b4fa] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#74c7ec] group-hover:shadow-lg group-hover:shadow-[#89b4fa]/20 transition-all duration-300">
                 <span className="text-2xl font-bold text-[#1e1e2e]">2</span>
@@ -396,7 +388,7 @@ export default function LandingPage() {
                 Receive instant, personalized explanations tailored to your learning level
               </p>
             </div>
-            
+
             <div className="text-center hover:scale-105 transition-transform duration-300 group">
               <div className="w-16 h-16 bg-[#a6e3a1] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#94e2d5] group-hover:shadow-lg group-hover:shadow-[#a6e3a1]/20 transition-all duration-300">
                 <span className="text-2xl font-bold text-[#1e1e2e]">3</span>

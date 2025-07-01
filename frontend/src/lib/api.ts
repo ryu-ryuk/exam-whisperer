@@ -29,7 +29,7 @@ export async function getReminders() {
   return res.json();
 }
 
-export async function submitQuiz(data: any) {
+export async function submitQuiz(data: Record<string, unknown>) {
   const res = await fetch(`${BASE_URL}/quiz`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -47,8 +47,7 @@ export async function quizAsk({ topic, difficulty, num_questions, question_index
   return res.json();
 }
 
-export async function quizEvaluate({ user_id, topic, question_index, user_answer, num_questions, difficulty, question }: { user_id: string, topic: string, question_index: number, user_answer: number, num_questions: number, difficulty: string, question: any }) {
-  // Defensive: ensure only a single question object is sent
+export async function quizEvaluate({ user_id, topic, question_index, user_answer, num_questions, difficulty, question }: { user_id: string, topic: string, question_index: number, user_answer: number, num_questions: number, difficulty: string, question: unknown }) {
   if (Array.isArray(question)) {
     throw new Error("quizEvaluate: question must be a single object, not an array");
   }
@@ -58,19 +57,7 @@ export async function quizEvaluate({ user_id, topic, question_index, user_answer
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question })
     });
-  if (!res.ok) {
-    let errorMsg = "Failed to evaluate quiz answer";
-    try {
-      const errJson = await res.json();
-      if (errJson && errJson.detail) {
-        errorMsg += ": " + (typeof errJson.detail === "string" ? errJson.detail : JSON.stringify(errJson.detail));
-      }
-    } catch (e) {
-      // fallback: not JSON
-      errorMsg += ": " + res.statusText;
-    }
-    throw new Error(errorMsg);
-  }
+  if (!res.ok) throw new Error("Failed to evaluate quiz");
   return res.json();
 }
 
