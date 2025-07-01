@@ -3,6 +3,37 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Catppuccin Mocha Theme Variables */
+:root {
+  /* Catppuccin Mocha Color Palette */
+  --catppuccin-base: #1e1e2e;
+  --catppuccin-mantle: #181825;
+  --catppuccin-crust: #11111b;
+  --catppuccin-surface0: #313244;
+  --catppuccin-surface1: #45475a;
+  --catppuccin-surface2: #585b70;
+  --catppuccin-overlay0: #6c7086;
+  --catppuccin-overlay1: #7f849c;
+  --catppuccin-overlay2: #9399b2;
+  --catppuccin-subtext0: #a6adc8;
+  --catppuccin-subtext1: #bac2de;
+  --catppuccin-text: #cdd6f4;
+  --catppuccin-lavender: #b4befe;
+  --catppuccin-blue: #89b4fa;
+  --catppuccin-sapphire: #74c7ec;
+  --catppuccin-sky: #89dceb;
+  --catppuccin-teal: #94e2d5;
+  --catppuccin-green: #a6e3a1;
+  --catppuccin-yellow: #f9e2af;
+  --catppuccin-peach: #fab387;
+  --catppuccin-maroon: #eba0ac;
+  --catppuccin-red: #f38ba8;
+  --catppuccin-mauve: #cba6f7;
+  --catppuccin-pink: #f5c2e7;
+  --catppuccin-flamingo: #f2cdcd;
+  --catppuccin-rosewater: #f5e0dc;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

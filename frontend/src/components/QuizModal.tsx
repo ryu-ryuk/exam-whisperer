@@ -143,16 +143,16 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
     const renderQuiz = () => {
         if (!quizStarted) {
             return (
-                <Card className="mb-4">
+                <Card className="mb-4 bg-[#313244] border-[#45475a]">
                     <CardHeader>
-                        <CardTitle>Start a Quiz</CardTitle>
+                        <CardTitle className="text-[#cdd6f4]">Start a Quiz</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col gap-3">
                             <div className="flex flex-col gap-1">
-                                <label className="text-sm text-gray-700 font-semibold">Topic</label>
+                                <label className="text-sm text-[#cdd6f4] font-semibold">Topic</label>
                                 <input
-                                    className="border border-purple-400 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                                    className="border border-[#45475a] bg-[#1e1e2e] text-[#cdd6f4] p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#cba6f7] w-full"
                                     type="text"
                                     value={localTopic}
                                     onChange={e => setLocalTopic(e.target.value)}
@@ -160,9 +160,9 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-sm text-gray-700 font-semibold">Number of Questions</label>
+                                <label className="text-sm text-[#cdd6f4] font-semibold">Number of Questions</label>
                                 <input
-                                    className="border border-purple-400 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 w-24"
+                                    className="border border-[#45475a] bg-[#1e1e2e] text-[#cdd6f4] p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#cba6f7] w-24"
                                     type="number"
                                     min={1}
                                     max={20}
@@ -171,9 +171,9 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-sm text-gray-700 font-semibold">Difficulty</label>
+                                <label className="text-sm text-[#cdd6f4] font-semibold">Difficulty</label>
                                 <select
-                                    className="border border-purple-400 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 w-32"
+                                    className="border border-[#45475a] bg-[#1e1e2e] text-[#cdd6f4] p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#cba6f7] w-32"
                                     value={quizDifficulty}
                                     onChange={e => setQuizDifficulty(e.target.value)}
                                 >
@@ -182,60 +182,60 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                                     <option value="hard">Hard</option>
                                 </select>
                             </div>
-                            <Button onClick={startQuiz} disabled={quizLoading || !localTopic} className="bg-purple-700 hover:bg-purple-800 text-white mt-2">Start Quiz</Button>
+                            <Button onClick={startQuiz} disabled={quizLoading || !localTopic} className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] mt-2">Start Quiz</Button>
                         </div>
                     </CardContent>
                 </Card>
             );
         }
-        if (quizLoading) return <div className="p-4">Loading...</div>;
+        if (quizLoading) return <div className="p-4 text-[#cdd6f4]">Loading...</div>;
         if (quizFinished) return (
-            <Card className="mb-4">
-                <CardHeader><CardTitle>Quiz Finished!</CardTitle></CardHeader>
+            <Card className="mb-4 bg-[#313244] border-[#45475a]">
+                <CardHeader><CardTitle className="text-[#cdd6f4]">Quiz Finished!</CardTitle></CardHeader>
                 <CardContent>
-                    <div className="mb-2">Score: {quizResult.correct} / {quizNumQuestions}</div>
-                    <div className="mb-2">Topic: <span className="font-semibold">{localTopic}</span></div>
-                    <Button onClick={onClose} className="mr-2">Close</Button>
-                    <Button onClick={restartQuiz} variant="outline" className="ml-2">Restart Quiz</Button>
+                    <div className="mb-2 text-[#cdd6f4]">Score: {quizResult.correct} / {quizNumQuestions}</div>
+                    <div className="mb-2 text-[#cdd6f4]">Topic: <span className="font-semibold">{localTopic}</span></div>
+                    <Button onClick={onClose} className="mr-2 bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e]">Close</Button>
+                    <Button onClick={restartQuiz} variant="outline" className="ml-2 border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59]">Restart Quiz</Button>
                 </CardContent>
             </Card>
         );
         const q = quizQuestions[quizCurrentIndex];
         if (!q) {
-            return <div className="p-4">Loading question...</div>;
+            return <div className="p-4 text-[#cdd6f4]">Loading question...</div>;
         }
         return (
-            <Card className="mb-4 max-h-[70vh] overflow-y-auto bg-slate-800 border border-purple-700 text-white flex flex-col">
-                <CardHeader><CardTitle>Quiz Question {quizCurrentIndex + 1} / {quizNumQuestions}</CardTitle></CardHeader>
+            <Card className="mb-4 max-h-[70vh] overflow-y-auto bg-[#313244] border border-[#45475a] text-[#cdd6f4] flex flex-col">
+                <CardHeader><CardTitle className="text-[#cdd6f4]">Quiz Question {quizCurrentIndex + 1} / {quizNumQuestions}</CardTitle></CardHeader>
                 <CardContent className="flex-1 flex flex-col pb-8">
-                    <div className="mb-2 font-semibold text-white">{q.text}</div>
+                    <div className="mb-2 font-semibold text-[#cdd6f4]">{q.text}</div>
                     <div className="flex flex-col gap-2">
                         {q.options.map((opt: string, idx: number) => (
-                            <Button key={idx} variant={selectedOption === idx ? "default" : "outline"} className={`text-left ${selectedOption === idx ? 'bg-purple-700 text-white' : 'bg-slate-800 text-white border border-purple-700 hover:bg-purple-800/20'}`} onClick={() => setSelectedOption(idx)} disabled={quizFeedback !== "" || showNextButton}>
+                            <Button key={idx} variant={selectedOption === idx ? "default" : "outline"} className={`text-left ${selectedOption === idx ? 'bg-[#cba6f7] text-[#1e1e2e]' : 'bg-[#1e1e2e] text-[#cdd6f4] border border-[#45475a] hover:bg-[#383a59]'}`} onClick={() => setSelectedOption(idx)} disabled={quizFeedback !== "" || showNextButton}>
                                 <span className="font-bold mr-2">{String.fromCharCode(65 + idx)}.</span> {opt}
                             </Button>
                         ))}
                     </div>
-                    <Button className="mt-4 bg-purple-700 text-white hover:bg-purple-800" onClick={submitQuizAnswer} disabled={selectedOption === null || quizFeedback !== "" || showNextButton || quizLoading}>Submit</Button>
+                    <Button className="mt-4 bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe]" onClick={submitQuizAnswer} disabled={selectedOption === null || quizFeedback !== "" || showNextButton || quizLoading}>Submit</Button>
                     {/* Feedback and answer details */}
                     {lastEval && (
-                        <Card className="mt-4 bg-slate-900 text-white border border-purple-700 max-h-48 overflow-y-auto">
+                        <Card className="mt-4 bg-[#1e1e2e] text-[#cdd6f4] border border-[#45475a] max-h-48 overflow-y-auto">
                             <CardContent className="p-4">
-                                <div className={`font-bold text-lg mb-2 ${lastEval.correct ? 'text-green-400' : 'text-red-400'}`}>{lastEval.correct ? "Correct!" : "Incorrect."}</div>
+                                <div className={`font-bold text-lg mb-2 ${lastEval.correct ? 'text-[#a6e3a1]' : 'text-[#f38ba8]'}`}>{lastEval.correct ? "Correct!" : "Incorrect."}</div>
                                 <div className="mb-2"><span className="font-semibold">Your answer:</span> {lastEval.user_answer ? `${String.fromCharCode(65 + lastEval.user_answer.index)}. ${lastEval.user_answer.text}` : "-"}</div>
                                 <div className="mb-2"><span className="font-semibold">Correct answer:</span> {lastEval.correct_answer ? `${String.fromCharCode(65 + lastEval.correct_answer.index)}. ${lastEval.correct_answer.text}` : "-"}</div>
                                 <div className="mb-2"><span className="font-semibold">Explanation:</span> <span className="block whitespace-pre-line break-words">{lastEval.feedback}</span></div>
                             </CardContent>
                         </Card>
                     )}
-                    {quizFeedback && !lastEval && <div className="mt-4 text-lg font-bold text-red-400">{quizFeedback}</div>}
+                    {quizFeedback && !lastEval && <div className="mt-4 text-lg font-bold text-[#f38ba8]">{quizFeedback}</div>}
                 </CardContent>
                 {/* Sticky footer for navigation buttons */}
                 {(showNextButton || quizFeedback || lastEval) && (
-                    <div className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-3xl bg-slate-900 border-t border-purple-700 flex flex-row gap-4 p-4 z-50 justify-end rounded-b-xl">
+                    <div className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-3xl bg-[#313244] border-t border-[#45475a] flex flex-row gap-4 p-4 z-50 justify-end rounded-b-xl">
                         {showNextButton && (
                             <Button
-                                className="bg-purple-700 text-white hover:bg-purple-800 transition-colors duration-200"
+                                className="bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe] transition-colors duration-200"
                                 onClick={handleNextQuestion}
                                 aria-label="Next or finish quiz"
                             >
@@ -243,7 +243,7 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                             </Button>
                         )}
                         <Button
-                            className="bg-transparent border border-purple-700 text-purple-300 hover:bg-purple-800/10 transition-colors duration-200"
+                            className="bg-transparent border border-[#45475a] text-[#a6adc8] hover:bg-[#383a59] transition-colors duration-200"
                             variant="outline"
                             onClick={restartQuiz}
                             disabled={quizLoading}
@@ -259,9 +259,9 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
 
     if (!open) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
-            <div className="bg-slate-900 rounded-xl shadow-2xl w-full max-w-3xl p-12 relative max-h-[90vh] overflow-y-auto border border-purple-700">
-                <button className="absolute top-3 right-3 text-gray-400 hover:text-white" onClick={onClose}>
+        <div className="fixed inset-0 bg-[#1e1e2e]/80 z-50 flex items-center justify-center overflow-y-auto">
+            <div className="bg-[#313244] rounded-xl shadow-2xl w-full max-w-3xl p-12 relative max-h-[90vh] overflow-y-auto border border-[#45475a]">
+                <button className="absolute top-3 right-3 text-[#a6adc8] hover:text-[#cdd6f4]" onClick={onClose}>
                     <X className="w-6 h-6" />
                 </button>
                 {renderQuiz()}

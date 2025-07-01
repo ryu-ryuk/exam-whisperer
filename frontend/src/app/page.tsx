@@ -16,127 +16,129 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="h-screen overflow-y-scroll bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 scroll-smooth snap-y snap-mandatory">
+    <div className="h-screen overflow-y-scroll bg-[#1e1e2e] text-[#cdd6f4] scroll-smooth snap-y snap-mandatory" style={{ scrollSnapType: 'y mandatory' }}>
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-purple-400" />
-            <span className="text-2xl font-bold text-white">Exam Whisperer</span>
+      <nav className="sticky top-0 w-full z-50 bg-[#1e1e2e]/80 backdrop-blur-sm border-b border-[#313244]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
+              <Brain className="h-5 w-5 text-[#1e1e2e]" />
+            </div>
+            <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisperer</span>
           </div>
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="#ask-anything" className="text-gray-300 hover:text-white transition-colors">
-              Ask Anything
+          <div className="hidden md:flex items-center space-x-8">
+            <a href="#features" className="text-[#bac2de] hover:text-[#f9e2af] transition-colors text-sm font-medium">
+              Features
             </a>
-            <a href="#quiz-mode" className="text-gray-300 hover:text-white transition-colors">
-              Quiz Mode
+            <a href="#how-it-works" className="text-[#bac2de] hover:text-[#f9e2af] transition-colors text-sm font-medium">
+              How it works
             </a>
-            <a href="#learning-tracker" className="text-gray-300 hover:text-white transition-colors">
-              Tracker
-            </a>
-            <a href="#voice" className="text-gray-300 hover:text-white transition-colors">
-              Voice
+            <a href="/chat" className="bg-[#cba6f7] text-[#1e1e2e] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#b4befe] transition-colors">
+              Get started
             </a>
           </div>
         </div>
       </nav>
 
-
       {/* Hero Section */}
       <section className="h-screen flex items-center justify-center relative overflow-hidden snap-start snap-always">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            transform: `translateY(${scrollY * 0.5}px)`,
-          }}
-        >
-          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
-          <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-2000"></div>
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#cba6f7]/5 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-[#89b4fa]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-[#a6e3a1]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
-
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <Badge className="mb-6 bg-purple-600/20 text-purple-300 border-purple-500/30">
-            <Sparkles className="w-4 h-4 mr-2" />
-            AI-Powered Learning
-          </Badge>
-          <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">
-            Exam
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-              {" "}
-              Whisperer
-            </span>
+        
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-8 relative z-10">
+          <div className="inline-flex items-center space-x-2 bg-[#313244] px-4 py-2 rounded-full hover:bg-[#313244]/80 hover:scale-105 transition-all duration-300 group cursor-pointer">
+            <Sparkles className="h-4 w-4 text-[#cba6f7] group-hover:animate-spin group-hover:text-[#b4befe] transition-all duration-300" />
+            <span className="text-sm text-[#a6adc8] group-hover:text-[#cdd6f4] transition-colors duration-300">AI-powered studying</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-bold text-[#cdd6f4] leading-tight group">
+            <span className="inline-block hover:scale-105 hover:text-[#f9e2af] transition-all duration-300 cursor-default">Study smarter with</span>
+            <br />
+            <span className="text-[#cba6f7] inline-block hover:scale-110 hover:text-[#b4befe] transition-all duration-500 cursor-default hover:drop-shadow-lg">Exam Whisper</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Your AI study companion that transforms how you prepare for exams. Get personalized explanations, practice
-            with smart quizzes, and track your progress.
+          
+          <p className="text-xl text-[#a6adc8] max-w-2xl mx-auto leading-relaxed hover:text-[#cdd6f4] transition-colors duration-300 cursor-default">
+            Your intelligent study companion that adapts to your learning style. 
+            Ask questions, practice with quizzes, and track your progress effortlessly.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/chat">
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg">
-              Start Learning Free
-              <ArrowRight className="ml-2 h-5 w-5" />
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/chat" className="group">
+              <Button className="bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe] px-8 py-3 text-lg font-medium hover:scale-110 hover:shadow-2xl hover:shadow-[#cba6f7]/30 transition-all duration-300 group-hover:rotate-1">
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
+              </Button>
+            </a>
+            <Button variant="outline" className="bg-blue-300 border-[#45475a] text-[#1e1e2e] hover:bg-[#979be5] px-8 py-3 text-lg hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/20 transition-all duration-300 hover:-rotate-1">
+              See how it works
             </Button>
-          </a>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 px-8 py-4 text-lg bg-transparent"
-            >
-              Watch Demo
-            </Button>
+          </div>
+          
+          {/* Floating elements */}
+          <div className="absolute top-16 left-8 opacity-20 animate-bounce" style={{ animationDelay: '0.5s' }}>
+            <Brain className="h-8 w-8 text-[#cba6f7]" />
+          </div>
+          <div className="absolute bottom-20 right-12 opacity-20 animate-bounce" style={{ animationDelay: '1.5s' }}>
+            <MessageCircle className="h-6 w-6 text-[#89b4fa]" />
+          </div>
+          <div className="absolute top-32 right-16 opacity-20 animate-bounce" style={{ animationDelay: '2.5s' }}>
+            <TrendingUp className="h-7 w-7 text-[#a6e3a1]" />
           </div>
         </div>
       </section>
 
       {/* Ask Anything Section */}
-      <section id="ask-anything" className="h-screen flex items-center py-20 bg-black/20 snap-start snap-always">
+      <section id="ask-anything" className="h-screen flex items-center py-20 bg-[#181825] snap-start snap-always">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <Badge className="mb-4 bg-blue-600/20 text-blue-300 border-blue-500/30">
+              <Badge className="mb-4 bg-[#89b4fa]/20 text-[#89b4fa] border-[#89b4fa]/30">
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Ask Anything
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-[#cdd6f4] mb-6">
                 Get Clear Explanations
-                <span className="text-blue-400"> Instantly</span>
+                <span className="text-[#89b4fa]"> Instantly</span>
               </h2>
-              <p className="text-xl text-gray-300 mb-8">
+              <p className="text-xl text-[#a6adc8] mb-8">
                 Confused about a concept? Just ask! Our AI breaks down complex topics into clean, concise explanations
                 tailored to your learning level.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Student-level explanations</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Student-level explanations</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Instant responses</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Instant responses</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Any subject, any topic</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Any subject, any topic</span>
                 </div>
               </div>
             </div>
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+            <Card className="bg-[#313244]/50 border-[#45475a] backdrop-blur-sm hover:bg-[#313244]/70 hover:border-[#89b4fa]/30 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/10 group">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <MessageCircle className="mr-2 h-5 w-5 text-blue-400" />
+                <CardTitle className="text-[#cdd6f4] flex items-center group-hover:text-[#89b4fa] transition-colors duration-300">
+                  <MessageCircle className="mr-2 h-5 w-5 text-[#89b4fa] group-hover:scale-110 transition-transform duration-300" />
                   Ask Your Question
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-gray-800/50 p-4 rounded-lg">
-                    <p className="text-gray-300 text-sm">You asked:</p>
-                    <p className="text-white">"Explain photosynthesis in simple terms"</p>
+                  <div className="bg-[#45475a]/50 p-4 rounded-lg group-hover:bg-[#45475a]/70 transition-colors duration-300">
+                    <p className="text-[#a6adc8] text-sm">You asked:</p>
+                    <p className="text-[#cdd6f4]">&quot;Explain photosynthesis in simple terms&quot;</p>
                   </div>
-                  <div className="bg-blue-600/20 p-4 rounded-lg border border-blue-500/30">
-                    <p className="text-gray-300 text-sm mb-2">AI Response:</p>
-                    <p className="text-white">
+                  <div className="bg-[#89b4fa]/20 p-4 rounded-lg border border-[#89b4fa]/30 group-hover:bg-[#89b4fa]/30 group-hover:border-[#89b4fa]/50 transition-all duration-300">
+                    <p className="text-[#a6adc8] text-sm mb-2">AI Response:</p>
+                    <p className="text-[#cdd6f4]">
                       Photosynthesis is like cooking for plants! They use sunlight as energy, water from their roots,
                       and carbon dioxide from the air to make their own food (glucose). As a bonus, they release oxygen
                       that we breathe!
@@ -153,63 +155,63 @@ export default function LandingPage() {
       <section id="quiz-mode" className="h-screen flex items-center py-20 snap-start snap-always">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm order-2 lg:order-1">
+            <Card className="bg-[#313244]/50 border-[#45475a] backdrop-blur-sm order-2 lg:order-1 hover:bg-[#313244]/70 hover:border-[#a6e3a1]/30 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#a6e3a1]/10 group">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Brain className="mr-2 h-5 w-5 text-green-400" />
+                <CardTitle className="text-[#cdd6f4] flex items-center group-hover:text-[#a6e3a1] transition-colors duration-300">
+                  <Brain className="mr-2 h-5 w-5 text-[#a6e3a1] group-hover:scale-110 transition-transform duration-300" />
                   Practice Quiz
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-gray-800/50 p-4 rounded-lg">
-                    <p className="text-white font-medium mb-3">What is the powerhouse of the cell?</p>
+                  <div className="bg-[#45475a]/50 p-4 rounded-lg group-hover:bg-[#45475a]/70 transition-colors duration-300">
+                    <p className="text-[#cdd6f4] font-medium mb-3">What is the powerhouse of the cell?</p>
                     <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full border-2 border-gray-400"></div>
-                        <span className="text-gray-300">Nucleus</span>
+                      <div className="flex items-center space-x-2 hover:bg-[#45475a]/30 p-2 rounded transition-colors duration-200">
+                        <div className="w-4 h-4 rounded-full border-2 border-[#6c7086]"></div>
+                        <span className="text-[#a6adc8]">Nucleus</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500"></div>
-                        <span className="text-white">Mitochondria</span>
+                      <div className="flex items-center space-x-2 hover:bg-[#a6e3a1]/10 p-2 rounded transition-colors duration-200">
+                        <div className="w-4 h-4 rounded-full bg-[#a6e3a1] border-2 border-[#a6e3a1] animate-pulse"></div>
+                        <span className="text-[#cdd6f4] font-medium">Mitochondria</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full border-2 border-gray-400"></div>
-                        <span className="text-gray-300">Ribosome</span>
+                      <div className="flex items-center space-x-2 hover:bg-[#45475a]/30 p-2 rounded transition-colors duration-200">
+                        <div className="w-4 h-4 rounded-full border-2 border-[#6c7086]"></div>
+                        <span className="text-[#a6adc8]">Ribosome</span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-green-600/20 p-3 rounded-lg border border-green-500/30">
-                    <p className="text-green-300 text-sm">✓ Correct! Great job!</p>
+                  <div className="bg-[#a6e3a1]/20 p-3 rounded-lg border border-[#a6e3a1]/30 group-hover:bg-[#a6e3a1]/30 group-hover:border-[#a6e3a1]/50 transition-all duration-300">
+                    <p className="text-[#a6e3a1] text-sm animate-pulse">✓ Correct! Great job!</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <div className="order-1 lg:order-2">
-              <Badge className="mb-4 bg-green-600/20 text-green-300 border-green-500/30">
+              <Badge className="mb-4 bg-[#a6e3a1]/20 text-[#a6e3a1] border-[#a6e3a1]/30">
                 <Brain className="w-4 h-4 mr-2" />
                 Quiz Mode
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-[#cdd6f4] mb-6">
                 Practice Makes
-                <span className="text-green-400"> Perfect</span>
+                <span className="text-[#a6e3a1]"> Perfect</span>
               </h2>
-              <p className="text-xl text-gray-300 mb-8">
+              <p className="text-xl text-[#a6adc8] mb-8">
                 Test your knowledge with AI-generated quizzes. Choose from multiple-choice questions or short-answer
                 formats, all tailored to your specific topics.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Topic-based questions</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Topic-based questions</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Multiple question formats</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Multiple question formats</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Instant feedback</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Instant feedback</span>
                 </div>
               </div>
             </div>
@@ -218,75 +220,75 @@ export default function LandingPage() {
       </section>
 
       {/* Learning Tracker Section */}
-      <section id="learning-tracker" className="h-screen flex items-center py-20 bg-black/20 snap-start snap-always">
+      <section id="learning-tracker" className="h-screen flex items-center py-20 bg-[#181825] snap-start snap-always">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <Badge className="mb-4 bg-orange-600/20 text-orange-300 border-orange-500/30">
+              <Badge className="mb-4 bg-[#fab387]/20 text-[#fab387] border-[#fab387]/30">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Learning Tracker
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-[#cdd6f4] mb-6">
                 Track Your
-                <span className="text-orange-400"> Progress</span>
+                <span className="text-[#fab387]"> Progress</span>
               </h2>
-              <p className="text-xl text-gray-300 mb-8">
-                See exactly where you're excelling and where you need more practice. Our intelligent tracking shows your
+              <p className="text-xl text-[#a6adc8] mb-8">
+                See exactly where you&apos;re excelling and where you need more practice. Our intelligent tracking shows your
                 strengths and identifies areas for improvement.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Visual progress charts</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Visual progress charts</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Weakness identification</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Weakness identification</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Personalized recommendations</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Personalized recommendations</span>
                 </div>
               </div>
             </div>
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+            <Card className="bg-[#313244]/50 border-[#45475a] backdrop-blur-sm hover:bg-[#313244]/70 hover:border-[#fab387]/30 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#fab387]/10 group">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <TrendingUp className="mr-2 h-5 w-5 text-orange-400" />
+                <CardTitle className="text-[#cdd6f4] flex items-center group-hover:text-[#fab387] transition-colors duration-300">
+                  <TrendingUp className="mr-2 h-5 w-5 text-[#fab387] group-hover:scale-110 transition-transform duration-300" />
                   Your Progress
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div>
+                  <div className="hover:scale-105 transition-transform duration-300">
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-300">Biology</span>
-                      <span className="text-green-400">85%</span>
+                      <span className="text-[#a6adc8]">Biology</span>
+                      <span className="text-[#a6e3a1] font-medium">85%</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: "85%" }}></div>
+                    <div className="w-full bg-[#45475a] rounded-full h-2 overflow-hidden">
+                      <div className="bg-[#a6e3a1] h-2 rounded-full transition-all duration-1000 ease-out hover:bg-[#a6e3a1]/80" style={{ width: "85%" }}></div>
                     </div>
                   </div>
-                  <div>
+                  <div className="hover:scale-105 transition-transform duration-300">
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-300">Chemistry</span>
-                      <span className="text-yellow-400">62%</span>
+                      <span className="text-[#a6adc8]">Chemistry</span>
+                      <span className="text-[#f9e2af] font-medium">62%</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "62%" }}></div>
+                    <div className="w-full bg-[#45475a] rounded-full h-2 overflow-hidden">
+                      <div className="bg-[#f9e2af] h-2 rounded-full transition-all duration-1000 ease-out hover:bg-[#f9e2af]/80" style={{ width: "62%" }}></div>
                     </div>
                   </div>
-                  <div>
+                  <div className="hover:scale-105 transition-transform duration-300">
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-300">Physics</span>
-                      <span className="text-red-400">45%</span>
+                      <span className="text-[#a6adc8]">Physics</span>
+                      <span className="text-[#f38ba8] font-medium">45%</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div className="bg-red-500 h-2 rounded-full" style={{ width: "45%" }}></div>
+                    <div className="w-full bg-[#45475a] rounded-full h-2 overflow-hidden">
+                      <div className="bg-[#f38ba8] h-2 rounded-full transition-all duration-1000 ease-out hover:bg-[#f38ba8]/80" style={{ width: "45%" }}></div>
                     </div>
                   </div>
-                  <div className="bg-orange-600/20 p-3 rounded-lg border border-orange-500/30">
-                    <p className="text-orange-300 text-sm">💡 Focus on Physics - Mechanics chapter needs attention!</p>
+                  <div className="bg-[#fab387]/20 p-3 rounded-lg border border-[#fab387]/30 group-hover:bg-[#fab387]/30 group-hover:border-[#fab387]/50 transition-all duration-300 hover:scale-105">
+                    <p className="text-[#fab387] text-sm">💡 Focus on Physics - Mechanics chapter needs attention!</p>
                   </div>
                 </div>
               </CardContent>
@@ -299,62 +301,62 @@ export default function LandingPage() {
       <section id="voice" className="h-screen flex items-center py-20 snap-start snap-always">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm order-2 lg:order-1">
+            <Card className="bg-[#313244]/50 border-[#45475a] backdrop-blur-sm order-2 lg:order-1 hover:bg-[#313244]/70 hover:border-[#cba6f7]/30 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#cba6f7]/10 group">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Volume2 className="mr-2 h-5 w-5 text-purple-400" />
+                <CardTitle className="text-[#cdd6f4] flex items-center group-hover:text-[#cba6f7] transition-colors duration-300">
+                  <Volume2 className="mr-2 h-5 w-5 text-[#cba6f7] group-hover:scale-110 transition-transform duration-300" />
                   Audio Explanation
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-gray-800/50 p-4 rounded-lg">
-                    <p className="text-white mb-3">
-                      "The mitochondria is called the powerhouse of the cell because..."
+                  <div className="bg-[#45475a]/50 p-4 rounded-lg group-hover:bg-[#45475a]/70 transition-colors duration-300">
+                    <p className="text-[#cdd6f4] mb-3">
+                      &quot;The mitochondria is called the powerhouse of the cell because...&quot;
                     </p>
                     <div className="flex items-center space-x-4">
-                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                      <Button size="sm" className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] hover:scale-105 transition-transform duration-200">
                         <Volume2 className="w-4 h-4 mr-2" />
                         Play
                       </Button>
-                      <div className="flex-1 bg-gray-700 rounded-full h-2">
-                        <div className="bg-purple-500 h-2 rounded-full" style={{ width: "40%" }}></div>
+                      <div className="flex-1 bg-[#45475a] rounded-full h-2 overflow-hidden">
+                        <div className="bg-[#cba6f7] h-2 rounded-full transition-all duration-1000 ease-out hover:bg-[#cba6f7]/80" style={{ width: "40%" }}></div>
                       </div>
-                      <span className="text-gray-400 text-sm">0:15 / 0:38</span>
+                      <span className="text-[#6c7086] text-sm group-hover:text-[#a6adc8] transition-colors duration-300">0:15 / 0:38</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 text-gray-300">
-                    <Volume2 className="w-4 h-4 text-purple-400" />
+                  <div className="flex items-center space-x-2 text-[#a6adc8] group-hover:text-[#cba6f7] transition-colors duration-300">
+                    <Volume2 className="w-4 h-4 text-[#cba6f7] group-hover:animate-pulse" />
                     <span className="text-sm">Powered by Whisper AI</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <div className="order-1 lg:order-2">
-              <Badge className="mb-4 bg-purple-600/20 text-purple-300 border-purple-500/30">
+              <Badge className="mb-4 bg-[#cba6f7]/20 text-[#cba6f7] border-[#cba6f7]/30">
                 <Volume2 className="w-4 h-4 mr-2" />
                 Voice Feature
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-[#cdd6f4] mb-6">
                 Hear Your
-                <span className="text-purple-400"> Answers</span>
+                <span className="text-[#cba6f7]"> Answers</span>
               </h2>
-              <p className="text-xl text-gray-300 mb-8">
+              <p className="text-xl text-[#a6adc8] mb-8">
                 Listen to explanations with our advanced voice feature powered by Whisper AI. Perfect for auditory
-                learners or when you're on the go.
+                learners or when you&apos;re on the go.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Natural voice synthesis</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Natural voice synthesis</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Adjustable playback speed</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Adjustable playback speed</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                  <span className="text-gray-300">Learn while multitasking</span>
+                  <CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
+                  <span className="text-[#a6adc8]">Learn while multitasking</span>
                 </div>
               </div>
             </div>
@@ -362,34 +364,83 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="h-screen flex items-center bg-[#181825] py-20 snap-start snap-always">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#cdd6f4] mb-4">
+              How it works
+            </h2>
+            <p className="text-lg text-[#a6adc8] max-w-2xl mx-auto">
+              Simple steps to transform your study experience
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-12">
+            <div className="text-center hover:scale-105 transition-transform duration-300 group">
+              <div className="w-16 h-16 bg-[#cba6f7] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#b4befe] group-hover:shadow-lg group-hover:shadow-[#cba6f7]/20 transition-all duration-300">
+                <span className="text-2xl font-bold text-[#1e1e2e]">1</span>
+              </div>
+              <h3 className="text-xl font-semibold text-[#cdd6f4] mb-3 group-hover:text-[#cba6f7] transition-colors duration-300">Ask your question</h3>
+              <p className="text-[#a6adc8] leading-relaxed group-hover:text-[#cdd6f4] transition-colors duration-300">
+                Simply type in any concept or topic you need help understanding
+              </p>
+            </div>
+            
+            <div className="text-center hover:scale-105 transition-transform duration-300 group">
+              <div className="w-16 h-16 bg-[#89b4fa] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#74c7ec] group-hover:shadow-lg group-hover:shadow-[#89b4fa]/20 transition-all duration-300">
+                <span className="text-2xl font-bold text-[#1e1e2e]">2</span>
+              </div>
+              <h3 className="text-xl font-semibold text-[#cdd6f4] mb-3 group-hover:text-[#89b4fa] transition-colors duration-300">Get clear explanations</h3>
+              <p className="text-[#a6adc8] leading-relaxed group-hover:text-[#cdd6f4] transition-colors duration-300">
+                Receive instant, personalized explanations tailored to your learning level
+              </p>
+            </div>
+            
+            <div className="text-center hover:scale-105 transition-transform duration-300 group">
+              <div className="w-16 h-16 bg-[#a6e3a1] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#94e2d5] group-hover:shadow-lg group-hover:shadow-[#a6e3a1]/20 transition-all duration-300">
+                <span className="text-2xl font-bold text-[#1e1e2e]">3</span>
+              </div>
+              <h3 className="text-xl font-semibold text-[#cdd6f4] mb-3 group-hover:text-[#a6e3a1] transition-colors duration-300">Practice and improve</h3>
+              <p className="text-[#a6adc8] leading-relaxed group-hover:text-[#cdd6f4] transition-colors duration-300">
+                Test your knowledge with quizzes and track your progress over time
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="h-screen flex items-center py-20 bg-gradient-to-r from-purple-600 to-pink-600 snap-start snap-always">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Ace Your Exams?</h2>
-          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students who are already using Exam Whisperer to improve their grades and study more
-            effectively.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/chat">
-            <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold">
-              Start Learning
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </a>
+      <section className="h-screen flex items-center justify-center snap-start snap-always">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center bg-[#313244] rounded-2xl p-12 hover:bg-[#313244]/80 hover:shadow-2xl hover:shadow-[#cba6f7]/10 transition-all duration-500 group">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#cdd6f4] mb-4 group-hover:text-[#f9e2af] transition-colors duration-300">
+              Ready to transform your studying?
+            </h2>
+            <p className="text-lg text-[#a6adc8] mb-8 max-w-2xl mx-auto group-hover:text-[#cdd6f4] transition-colors duration-300">
+              Join students who are already using Exam Whisperer to study more effectively and achieve better results.
+            </p>
+            <a href="/chat">
+              <Button className="bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe] px-8 py-3 text-lg font-medium hover:scale-110 hover:shadow-lg hover:shadow-[#cba6f7]/30 transition-all duration-300 group">
+                Get started for free
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </Button>
+            </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-black/40 py-12">
-        <div className="container mx-auto px-4">
+      <footer className="border-t border-[#313244] bg-[#181825]">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <Brain className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold text-white">Exam Whisperer</span>
+            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+              <div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
+                <Brain className="h-5 w-5 text-[#1e1e2e]" />
+              </div>
+              <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisper</span>
             </div>
-            <div className="text-gray-400">© 2024 Exam Whisperer. All rights reserved.</div>
+            <p className="text-[#6c7086] text-sm">© 2025 Exam Whisper. All rights reserved.</p>
           </div>
         </div>
       </footer>

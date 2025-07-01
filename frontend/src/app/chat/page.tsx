@@ -226,8 +226,8 @@ export default function ChatPage() {
   function TopicModal({ open, children }: { open: boolean, children: React.ReactNode }) {
     if (!open) return null;
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-        <div className="bg-slate-900 border border-purple-700 rounded-lg shadow-lg p-8 min-w-[320px] max-w-full">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e1e2e]/80">
+        <div className="bg-[#313244] border border-[#45475a] rounded-lg shadow-lg p-8 min-w-[320px] max-w-full">
           {children}
         </div>
       </div>
@@ -235,15 +235,15 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[#1e1e2e] text-[#cdd6f4] flex flex-col">
       {/* Topic Selection Modal */}
       <TopicModal open={topicModalOpen}>
-        <div className="mb-4 text-xl font-bold text-white">Select a Topic</div>
+        <div className="mb-4 text-xl font-bold text-[#cdd6f4]">Select a Topic</div>
         {topicsLoading ? (
-          <div className="text-white">Loading topics...</div>
+          <div className="text-[#cdd6f4]">Loading topics...</div>
         ) : userTopics.length > 0 ? (
           <select
-            className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+            className="border border-[#45475a] bg-[#313244] text-[#cdd6f4] p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#cba6f7] min-w-[180px]"
             value={userTopic}
             onChange={e => setUserTopic(e.target.value)}
           >
@@ -255,7 +255,7 @@ export default function ChatPage() {
           </select>
         ) : (
           <input
-            className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+            className="border border-[#45475a] bg-[#313244] text-[#cdd6f4] p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#cba6f7] min-w-[180px]"
             placeholder="Enter custom topic"
             value={userTopic}
             onChange={e => setUserTopic(e.target.value)}
@@ -267,7 +267,7 @@ export default function ChatPage() {
               if (userTopic) setTopicModalOpen(false)
             }}
             disabled={!userTopic}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e]"
           >
             Confirm
           </Button>
@@ -275,18 +275,20 @@ export default function ChatPage() {
       </TopicModal>
 
       {/* Header */}
-      <header className="bg-black/20 backdrop-blur-md border-b border-white/10 p-4">
+      <header className="bg-[#1e1e2e]/80 backdrop-blur-sm border-b border-[#313244] p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link href="/">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+              <Button variant="ghost" size="sm" className="text-[#cdd6f4] hover:bg-[#313244]">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
             </Link>
             <div className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold text-white">Exam Whisperer</span>
+              <div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
+                <Brain className="h-5 w-5 text-[#1e1e2e]" />
+              </div>
+              <span className="text-xl font-semibold text-[#f9e2af]">Exam Whisperer</span>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -294,15 +296,15 @@ export default function ChatPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowContextModal(true)}
-              className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+              className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59]"
             >
               <Settings className="w-4 h-4 mr-2" />
               Context & Settings
             </Button>
-            <Badge className="bg-green-600/20 text-green-300 border-green-500/30">
-              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-              Online
-            </Badge>
+            <div className="inline-flex items-center space-x-2 bg-[#313244] px-3 py-1 rounded-full">
+              <div className="w-2 h-2 bg-[#a6e3a1] rounded-full animate-pulse"></div>
+              <span className="text-sm text-[#a6e3a1]">Online</span>
+            </div>
           </div>
         </div>
       </header>
@@ -312,20 +314,18 @@ export default function ChatPage() {
         <div className="container mx-auto max-w-4xl">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4`}>
-              <div
-                className={`flex items-start space-x-3 max-w-[80%] ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""}`}
-              >
+              <div className={`flex items-start space-x-3 max-w-[80%] ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""}`}>
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-purple-600" : "bg-gradient-to-r from-blue-500 to-purple-600"}`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-[#cba6f7]" : "bg-[#89b4fa]"}`}
                 >
                   {message.role === "user" ? (
-                    <User className="w-4 h-4 text-white" />
+                    <User className="w-4 h-4 text-[#1e1e2e]" />
                   ) : (
-                    <Brain className="w-4 h-4 text-white" />
+                    <Brain className="w-4 h-4 text-[#1e1e2e]" />
                   )}
                 </div>
                 <Card
-                  className={`p-4 ${message.role === "user" ? "bg-purple-600 text-white" : "bg-white/10 text-white border-white/20"}`}
+                  className={`p-4 ${message.role === "user" ? "bg-[#cba6f7] text-[#1e1e2e]" : "bg-[#313244] text-[#cdd6f4] border-[#45475a]"}`}
                 >
                   <div className="whitespace-pre-wrap flex flex-col gap-2">
                     {message.content}
@@ -333,7 +333,7 @@ export default function ChatPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="mt-2 w-fit"
+                        className="mt-2 w-fit border-[#45475a] text-[#a6adc8] hover:bg-[#383a59]"
                         onClick={() => handleReadAloud(message.content)}
                       >
                         🔊 Read Aloud
@@ -341,7 +341,7 @@ export default function ChatPage() {
                     )}
                   </div>
                   <div
-                    className={`text-xs mt-2 opacity-70 ${message.role === "user" ? "text-purple-100" : "text-gray-300"}`}
+                    className={`text-xs mt-2 opacity-70 ${message.role === "user" ? "text-[#1e1e2e]/70" : "text-[#a6adc8]"}`}
                   >
                     {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
@@ -383,14 +383,14 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-black/20 backdrop-blur-md border-t border-white/10 p-4">
+      <div className="bg-[#1e1e2e]/80 backdrop-blur-sm border-t border-[#313244] p-4">
         <div className="container mx-auto max-w-4xl">
           {/* Quiz trigger button above input */}
           {!quizActive && (
             <div className="mb-2 flex justify-end">
               <Button
                 variant="outline"
-                className="bg-purple-700 text-white border-purple-400 hover:bg-purple-800"
+                className="bg-[#313244] text-[#cdd6f4] border-[#45475a] hover:bg-[#383a59]"
                 onClick={() => setQuizActive(true)}
                 disabled={topicModalOpen}
               >
@@ -404,13 +404,13 @@ export default function ChatPage() {
               <div className="flex-1 relative">
                 {/* Topic selector */}
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="text-white text-sm font-semibold bg-purple-800 px-2 py-1 rounded-l">Topic</span>
+                  <span className="text-[#cdd6f4] text-sm font-semibold bg-[#313244] px-2 py-1 rounded-l">Topic</span>
                   {topicsLoading ? (
-                    <span className="text-white">Loading topics...</span>
+                    <span className="text-[#cdd6f4]">Loading topics...</span>
                   ) : userTopics.length > 0 && userTopic !== "__custom__" ? (
                     <>
                       <select
-                        className="border border-purple-500 bg-slate-900 text-white p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+                        className="border border-[#45475a] bg-[#313244] text-[#cdd6f4] p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-[#cba6f7] min-w-[180px]"
                         value={userTopic}
                         onChange={e => {
                           if (e.target.value === "__custom__") {
@@ -437,7 +437,7 @@ export default function ChatPage() {
                     </>
                   ) : (
                     <input
-                      className="border border-purple-500 bg-slate-900 text-white p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+                      className="border border-[#45475a] bg-[#313244] text-[#cdd6f4] p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-[#cba6f7] min-w-[180px]"
                       placeholder="Set topic (e.g. Paleontology)"
                       value={userTopic}
                       onChange={e => setUserTopic(e.target.value)}
@@ -450,21 +450,21 @@ export default function ChatPage() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about your studies..."
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[50px] max-h-[120px]"
+                  className="w-full bg-[#313244] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] resize-none focus:outline-none focus:ring-2 focus:ring-[#cba6f7] focus:border-transparent min-h-[50px] max-h-[120px]"
                   rows={1}
                   disabled={isLoading}
                 />
-                <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                <div className="absolute bottom-2 right-2 text-xs text-[#6c7086]">
                   Press Enter to send, Shift+Enter for new line
                 </div>
               </div>
               <Button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 h-[50px]"
+                className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] px-6 py-3 h-[50px]"
               >
                 {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#1e1e2e]/30 border-t-[#1e1e2e] rounded-full animate-spin" />
                 ) : (
                   <Send className="w-5 h-5" />
                 )}
@@ -480,19 +480,19 @@ export default function ChatPage() {
 
       {/* Context Control Modal */}
       {showContextModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="bg-gray-900/95 border-white/20 w-full max-w-4xl max-h-[80vh] overflow-hidden">
-            <CardHeader className="border-b border-white/10">
+        <div className="fixed inset-0 bg-[#1e1e2e]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="bg-[#313244] border-[#45475a] w-full max-w-4xl max-h-[80vh] overflow-hidden">
+            <CardHeader className="border-b border-[#45475a]">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-white flex items-center">
-                  <Settings className="mr-2 h-5 w-5 text-purple-400" />
+                <CardTitle className="text-[#cdd6f4] flex items-center">
+                  <Settings className="mr-2 h-5 w-5 text-[#cba6f7]" />
                   Context & Settings
                 </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowContextModal(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-[#a6adc8] hover:text-[#cdd6f4] hover:bg-[#383a59]"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -502,19 +502,19 @@ export default function ChatPage() {
               <div className="space-y-6">
                 {/* System Prompt Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">System Instructions</h3>
+                  <h3 className="text-lg font-semibold text-[#cdd6f4] mb-3">System Instructions</h3>
                   <textarea
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                     placeholder="Define how the AI should behave and respond..."
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px]"
+                    className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] resize-none focus:outline-none focus:ring-2 focus:ring-[#cba6f7] focus:border-transparent min-h-[100px]"
                   />
                 </div>
 
                 {/* Model Parameters */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-white text-sm font-medium mb-2">Temperature: {temperature}</label>
+                    <label className="block text-[#cdd6f4] text-sm font-medium mb-2">Temperature: {temperature}</label>
                     <input
                       type="range"
                       min="0"
@@ -522,12 +522,12 @@ export default function ChatPage() {
                       step="0.1"
                       value={temperature}
                       onChange={(e) => setTemperature(Number.parseFloat(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                      className="w-full h-2 bg-[#45475a] rounded-lg appearance-none cursor-pointer slider"
                     />
-                    <p className="text-gray-400 text-xs mt-1">Controls creativity (0 = focused, 1 = creative)</p>
+                    <p className="text-[#6c7086] text-xs mt-1">Controls creativity (0 = focused, 1 = creative)</p>
                   </div>
                   <div>
-                    <label className="block text-white text-sm font-medium mb-2">Max Tokens: {maxTokens}</label>
+                    <label className="block text-[#cdd6f4] text-sm font-medium mb-2">Max Tokens: {maxTokens}</label>
                     <input
                       type="range"
                       min="100"
@@ -535,19 +535,19 @@ export default function ChatPage() {
                       step="50"
                       value={maxTokens}
                       onChange={(e) => setMaxTokens(Number.parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                      className="w-full h-2 bg-[#45475a] rounded-lg appearance-none cursor-pointer slider"
                     />
-                    <p className="text-gray-400 text-xs mt-1">Maximum response length</p>
+                    <p className="text-[#6c7086] text-xs mt-1">Maximum response length</p>
                   </div>
                 </div>
 
                 {/* Document Context Section */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Reference Documents</h3>
+                    <h3 className="text-lg font-semibold text-[#cdd6f4]">Reference Documents</h3>
                     <Button
                       size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e]"
                       disabled={uploading}
                       onClick={() => {
                         const input = document.createElement("input")
