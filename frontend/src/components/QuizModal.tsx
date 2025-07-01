@@ -11,12 +11,17 @@ interface QuizModalProps {
     onQuizComplete?: (result: { correct: number; total: number; topic: string }) => void;
 }
 
+interface QuizQuestion {
+    text: string;
+    options: string[];
+    [key: string]: any; // allow extra fields if needed
+}
+
 export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete }: QuizModalProps) {
     const [quizNumQuestions, setQuizNumQuestions] = useState(3);
     const [quizDifficulty, setQuizDifficulty] = useState("medium");
-    const [quizQuestions, setQuizQuestions] = useState<any[]>([]); // stores all fetched questions
+    const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]); // stores all fetched questions
     const [quizCurrentIndex, setQuizCurrentIndex] = useState(0);
-    const [quizUserAnswers, setQuizUserAnswers] = useState<number[]>([]);
     const [quizFeedback, setQuizFeedback] = useState("");
     const [quizLoading, setQuizLoading] = useState(false);
     const [quizFinished, setQuizFinished] = useState(false);
@@ -33,7 +38,6 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
     const startQuiz = async () => {
         setQuizQuestions([]);
         setQuizCurrentIndex(0);
-        setQuizUserAnswers([]);
         setQuizFeedback("");
         setQuizFinished(false);
         setQuizResult({ correct: 0, total: 0 });
@@ -42,7 +46,7 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
         try {
             const data = await quizAsk({ topic: localTopic, difficulty: quizDifficulty, num_questions: quizNumQuestions, question_index: 0 });
             setQuizQuestions([data.question]);
-        } catch (err) {
+        } catch {
             setQuizFeedback("Failed to load quiz question.");
         }
         setQuizLoading(false);
@@ -53,7 +57,6 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
         setQuizStarted(false);
         setQuizQuestions([]);
         setQuizCurrentIndex(0);
-        setQuizUserAnswers([]);
         setQuizFeedback("");
         setQuizFinished(false);
         setQuizResult({ correct: 0, total: 0 });
@@ -70,7 +73,7 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                 next[index] = data.question;
                 return next;
             });
-        } catch (err) {
+        } catch {
             setQuizFeedback("Failed to load next question.");
         }
         setQuizLoading(false);
@@ -95,7 +98,6 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                 difficulty: quizDifficulty,
                 question,
             });
-            setQuizUserAnswers((prev) => [...prev, selectedOption]);
             setQuizFeedback(data.feedback || (data.correct ? "Correct!" : "Incorrect."));
             setQuizResult((prev) => ({
                 correct: prev.correct + (data.correct ? 1 : 0),
@@ -110,7 +112,7 @@ export default function QuizModal({ open, onClose, defaultTopic, onQuizComplete 
                 user_answer: data.user_answer,
             });
             setShowNextButton(true);
-        } catch (err) {
+        } catch {
             setQuizFeedback("Failed to evaluate answer.");
             setQuizLoading(false);
         }

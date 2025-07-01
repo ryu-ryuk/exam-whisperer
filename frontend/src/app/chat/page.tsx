@@ -5,8 +5,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Brain, Send, User, Sparkles, ArrowLeft, Settings, Upload, FileText, X, Trash2 } from "lucide-react"
+import { Brain, Send, User, ArrowLeft, Settings, Upload, FileText, X, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { askAnything } from "@/lib/api"
 import { uploadSyllabus } from "@/lib/api-syllabus"
@@ -46,7 +45,6 @@ export default function ChatPage() {
 
   // Add state for upload
   const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
 
   // Quiz state
   const [quizActive, setQuizActive] = useState(false)
@@ -55,7 +53,6 @@ export default function ChatPage() {
   // Topics state
   const [userTopics, setUserTopics] = useState<string[]>([])
   const [topicsLoading, setTopicsLoading] = useState(false)
-  const [topicsError, setTopicsError] = useState<string | null>(null)
 
   // Modal state for topic selection
   const [topicModalOpen, setTopicModalOpen] = useState(false)
@@ -71,7 +68,7 @@ export default function ChatPage() {
         setUserTopics(topics)
         if (topics.length > 0 && !userTopic) setTopicModalOpen(true)
       })
-      .catch((err) => setTopicsError(err.message || "Failed to load topics"))
+      .catch((err) => console.error(err.message || "Failed to load topics"))
       .finally(() => setTopicsLoading(false))
   }, [userId, userTopic])
 
@@ -90,50 +87,26 @@ export default function ChatPage() {
     scrollToBottom()
   }, [messages, typingContent])
 
-  const simulateTyping = (text: string, callback: () => void) => {
-    let index = 0
-    setTypingContent("")
-
-    const typeInterval = setInterval(() => {
-      if (index < text.length) {
-        setTypingContent((prev) => prev + text[index])
-        index++
-      } else {
-        clearInterval(typeInterval)
-        setTypingContent("")
-        callback()
-      }
-    }, 30)
-  }
-
-  const generateAIResponse = (userMessage: string): string => {
-    // Include context from uploaded documents
-    let contextInfo = ""
-    if (contextDocs.length > 0) {
-      contextInfo = `\n\nBased on the uploaded documents: ${contextDocs.map((doc) => doc.content.slice(0, 500)).join("\n\n")}`
+  // Handler for PDF upload
+  async function handlePdfUpload(file: File) {
+    setUploading(true)
+    try {
+      const result = await uploadSyllabus(file, "demo-user")
+      alert("Syllabus uploaded! Topics: " + JSON.stringify(result.topics))
+    } catch {
+      setUploading(false)
     }
-
-    const responses = [
-      `${systemPrompt}\n\nRegarding "${userMessage.slice(0, 30)}...":\n\nLet me break this down for you in simple terms.\n\nThis concept is actually quite fascinating when you think about it. The key thing to understand is that everything builds upon fundamental principles.${contextInfo}\n\nWould you like me to explain any specific part in more detail?`,
-
-      `Following my instructions as your tutor: I can help you understand this topic!\n\nHere's a student-friendly explanation:\n\n${userMessage.includes("math") || userMessage.includes("equation")
-        ? "Mathematics is all about patterns and relationships. Let's work through this step by step so it makes perfect sense."
-        : "This is a really important concept that many students find challenging at first, but once you get it, everything clicks into place."
-      }${contextInfo}\n\nWhat specific aspect would you like me to focus on?`,
-
-      `Great question! Based on my role as your study companion:\n\nLet me explain this in a way that's easy to remember:\n\n• First, think of it like this...\n• Then, consider how it connects to what you already know\n• Finally, here's a simple way to remember it${contextInfo}\n\nDoes this help clarify things? Feel free to ask follow-up questions!`,
-    ]
-
-    return responses[Math.floor(Math.random() * responses.length)]
+    setUploading(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handler for chat form submit
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if (!input.trim()) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input.trim(),
+      content: input,
       role: "user",
       timestamp: new Date(),
     }
@@ -141,54 +114,52 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
+    setTypingContent("")
 
     try {
-      // Call backend endpoint for explanation
-      const response = await askAnything(input.trim(), "demo-user", userTopic);
-      // Adjust this depending on your backend's response shape
-      const aiResponse = response.answer || response.explanation || JSON.stringify(response)
+      const response = await askAnything(
+        input,
+        userId,
+        userTopic
+      )
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponse,
-        role: "assistant",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, assistantMessage])
-    } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
-          content: "Sorry, there was an error contacting the backend.",
+          id: Date.now().toString() + "-assistant",
+          content: response.content,
           role: "assistant",
           timestamp: new Date(),
         },
       ])
-    }
-    setIsLoading(false)
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
-    }
-  }
-
-  // Handler for PDF upload
-  async function handlePdfUpload(file: File) {
-    setUploading(true)
-    setUploadError(null)
-    try {
-      // You can replace 'demo-user' with real user id logic
-      const result = await uploadSyllabus(file, "demo-user")
-      // Optionally, show topics or update contextDocs with result.topics
-      alert("Syllabus uploaded! Topics: " + JSON.stringify(result.topics))
+      setTypingContent("")
     } catch (err: any) {
-      setUploadError(err.message || "Upload failed")
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString() + "-error",
+          content: "Sorry, something went wrong. Please try again.",
+          role: "assistant",
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setIsLoading(false)
     }
-    setUploading(false)
+  }
+
+  // Handle Enter and Shift+Enter in textarea
+  function handleKeyPress(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!isLoading && input.trim()) {
+        // Find the closest form and submit it
+        const form = (e.target as HTMLElement).closest("form");
+        if (form) {
+          form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+        }
+      }
+    }
   }
 
   // Read Aloud using backend Omnidimension TTS
@@ -204,7 +175,7 @@ export default function ChatPage() {
       if (!data.audio) throw new Error("No audio returned");
       const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
       audio.play();
-    } catch (err) {
+    } catch {
       alert("Text-to-speech failed. Please try again.");
     }
   }
@@ -426,22 +397,24 @@ export default function ChatPage() {
                         ))}
                         <option value="__custom__">Other (type manually)</option>
                       </select>
-                      {userTopic === "__custom__" && (
-                        <input
-                          className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px] ml-2"
-                          placeholder="Enter custom topic"
-                          value={userTopic === "__custom__" ? "" : userTopic}
-                          onChange={e => setUserTopic(e.target.value)}
-                        />
-                      )}
                     </>
                   ) : (
                     <input
-                      className="border border-[#45475a] bg-[#313244] text-[#cdd6f4] p-2 rounded-r focus:outline-none focus:ring-2 focus:ring-[#cba6f7] min-w-[180px]"
-                      placeholder="Set topic (e.g. Paleontology)"
+                      className="border border-[#45475a] bg-[#313244] text-[#cdd6f4] p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#cba6f7] min-w-[180px]"
+                      placeholder="Enter custom topic"
                       value={userTopic}
                       onChange={e => setUserTopic(e.target.value)}
                     />
+                  )}
+                  {userTopic === "__custom__" && (
+                    <div className="flex flex-col gap-2 w-full">
+                      <input
+                        className="border border-purple-500 bg-slate-900 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px] ml-2"
+                        placeholder="Enter custom topic"
+                        value={userTopic}
+                        onChange={e => setUserTopic(e.target.value)}
+                      />
+                    </div>
                   )}
                 </div>
                 <textarea
