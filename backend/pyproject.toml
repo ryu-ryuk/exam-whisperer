@@ -10,12 +10,12 @@ dependencies = [
     "configobj==5.0.9",
     "configparser==7.2.0",
     "datetime==5.5",
-    "fastapi==0.115.14",
+    "fastapi[standard]==0.115.14",
     "ipython-pygments-lexers==1.1.1",
     "jaraco.collections==5.1.0",
     "openai==1.92.3",
     "pathway==0.24.0",
-    "psycopg2==2.9.10",
+    "psycopg2-binary==2.9.10",
     "pymupdf==1.26.1",
     "python-dotenv==1.1.1",
     "python-multipart==0.0.20",
@@ -25,6 +25,8 @@ dependencies = [
     "typing-inspection==0.4.1",
     "uvicorn==0.34.3",
     "omnidimension==0.2.9",
+    "google-auth>=2.40.3",
+    "python-jose>=3.5.0",
 ]
 # uv pip install ".[dev]"
 

@@ -6,10 +6,11 @@ entry point for the fastapi app.
 - runs the api with uvicorn
 """
 from dotenv import load_dotenv
+from google import oauth2
 load_dotenv()
 
 from fastapi import FastAPI
-from routes import ask, quiz, progress, reminders, syllabus, upload, topics
+from routes import ask, oauth, quiz, progress, reminders, syllabus, upload, topics
 import threading
 from src.services.jsonl_uploader import run_uploader
 import os 
@@ -31,6 +32,8 @@ app.include_router(syllabus.router)  # opt for now
 app.include_router(upload.router)  
 app.include_router(topics.router)
 # app.include_router(voices.router)
+app.include_router(oauth.router)
+
 
 from fastapi.middleware.cors import CORSMiddleware
 

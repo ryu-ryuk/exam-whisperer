@@ -1,6 +1,15 @@
-from sqlalchemy import Column, String, Float, DateTime, Text
-from datetime import datetime
+from sqlalchemy import Column, Integer, Sequence, String, Float, DateTime, Text
+from datetime import datetime, timezone
 from db import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, unique=True, nullable=True)
+    email = Column(String, unique=True, nullable=True)
+    password_hash = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class UserTopicActivity(Base):
     __tablename__ = "user_topic_activity"
