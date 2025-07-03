@@ -1,3 +1,35 @@
+from fastapi import APIRouter, HTTPException, UploadFile, Request
+from pydantic import BaseModel # Ensure BaseModel is imported
+from typing import Optional
+
+from services.llm import (
+    explain_concept,
+    generate_quiz,
+    BackendLLMConfig,
+    LLMProviderError,
+)
+from services.voices_mods import text_to_speech, VoiceProcessingError
+from services.event_logger import log_user_event
+
+
+router = APIRouter()
+
+class TTSRequest(BaseModel):
+    text: str
+
+@router.post("/tts")
+async def text_to_speech_endpoint(request_data: TTSRequest):
+    try:
+        print("[DEBUG] /tts text:", request_data.text)
+        audio_base64 = await text_to_speech(request_data.text)
+        return {"audio": audio_base64}
+    except VoiceProcessingError as e:
+        print("[ERROR] TTS failed:", str(e))
+        raise HTTPException(500, detail=f"TTS generation failed: {str(e)}")
+    except Exception as e:
+        print("[EXCEPTION] TTS internal error:", str(e))
+        raise HTTPException(500, detail=f"Internal server error during TTS: {str(e)}")
+
 # from json import JSONDecodeError
 # from fastapi import APIRouter, UploadFile, HTTPException, Request
 # from services.voices_mods import process_voice_query, text_to_speech
