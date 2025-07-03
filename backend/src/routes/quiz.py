@@ -1,84 +1,68 @@
-"""
-handles quiz-related endpoints:
-
-- /quiz: generate a quiz for a given topic and difficulty
-- /answer:  evaluate the submitted quiz answers
-            log performance and update topic stats via pathway
-"""
-
 from fastapi import APIRouter, HTTPException, Body, Request
-from services.quiz_utils import generate_quiz, evaluate_quiz_answer, get_quiz_question
+from services.quiz_utils import evaluate_quiz_answer
 from services.event_logger import log_user_event
 import logging
 import json
 
+from services.llm import generate_quiz as llm_generate_quiz, LLMProviderError
+from src.models import QuizCreateRequest, QuizEvaluateRequest, BackendLLMConfig
+
 router = APIRouter()
 
 @router.post("/quiz")
-async def create_quiz(topic: str, difficulty: str = "medium", num_questions: int = 3):
-    log_user_event("anonymous", "quiz_create", topic, {"difficulty": difficulty, "num_questions": num_questions})
+async def create_quiz_question(request_data: QuizCreateRequest):
     """
-    Generate a quiz for a given topic, difficulty, and number of questions.
-    The topic must be chosen by the user (not LLM-inferred).
+    Generate a single, LLM-driven quiz question for a given topic and difficulty.
     """
     try:
-        return await generate_quiz(topic, difficulty, num_questions)
+        topic_for_llm = request_data.topic if request_data.topic is not None else ""
+        
+        # Add explicit check for llm_config being a Pydantic object
+        if not isinstance(request_data.llm_config, BackendLLMConfig):
+            logging.error(f"Invalid llm_config received: {request_data.llm_config}")
+            raise HTTPException(status_code=400, detail="Invalid LLM configuration format.")
+
+        quiz_question_response = await llm_generate_quiz(
+            topic=topic_for_llm,
+            difficulty=request_data.difficulty,
+            llm_config=request_data.llm_config,
+        )
+        log_user_event(request_data.username, "quiz_question_generated", request_data.topic, {
+            "difficulty": request_data.difficulty,
+            "question": quiz_question_response.get("question", "N/A"),
+            "llm_provider": request_data.llm_config.provider
+        })
+        return quiz_question_response
+    except LLMProviderError as e:
+        detail_msg = str(e)
+        status_code = 500
+        if "API Key is missing" in detail_msg or "authentication" in detail_msg or "invalid_api_key" in detail_msg.lower():
+            status_code = 401
+        raise HTTPException(status_code=status_code, detail=detail_msg)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        logging.exception(f"Error generating quiz question: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error generating quiz: {str(e)}")
+
 
 @router.post("/quiz/evaluate")
-async def evaluate_answer(
-    request: Request,
-    user_id: str,
-    topic: str,
-    question_index: int,
-    user_answer: int,
-    num_questions: int = 1,
-    difficulty: str = "medium"
-):
-    log_user_event(user_id, "quiz_evaluate", topic, {"question_index": question_index, "user_answer": user_answer, "difficulty": difficulty})
+async def evaluate_answer(request_data: QuizEvaluateRequest):
     """
-    Evaluate a single quiz question's answer. Accepts a single question object and quiz context.
+    Evaluate a single quiz question's answer using optional LLM evaluation.
     """
     try:
-        # Parse only the 'question' object from the request body, ignore extra data
-        body = await request.json()
-        question = body["question"] if isinstance(body, dict) and "question" in body else None
-        logging.info(f"/quiz/evaluate received question: {json.dumps(question)}")
-        if not question:
-            raise ValueError("Missing 'question' in request body.")
+        
         return await evaluate_quiz_answer(
-            user_id=user_id,
-            topic=topic,
-            question_index=question_index,
-            user_answer=user_answer,
-            question=question,
-            num_questions=num_questions,
-            difficulty=difficulty
+            username=request_data.username,
+            topic=request_data.topic,
+            question_index=request_data.question_index,
+            user_answer=request_data.user_answer,
+            question=request_data.question,
+            num_questions=request_data.num_questions,
+            difficulty=request_data.difficulty,
+            llm_config=request_data.llm_config # Pass llm_config to evaluation
         )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
-
-@router.post("/quiz/ask")
-async def ask_quiz_question(
-    topic: str,
-    difficulty: str = "medium",
-    num_questions: int = 3,
-    question_index: int = 0
-):
-    log_user_event("anonymous", "quiz_ask", topic, {"difficulty": difficulty, "num_questions": num_questions, "question_index": question_index})
-    """
-    Serve a single quiz question by index for a given topic, difficulty, and total number of questions.
-    The topic and number of questions must be user-selected and validated.
-    """
-    try:
-        question = await get_quiz_question(topic, difficulty, num_questions, question_index)
-        return {"question": question, "question_index": question_index, "num_questions": num_questions, "topic": topic, "difficulty": difficulty}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        logging.exception(f"Error evaluating quiz answer: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error evaluating quiz: {str(e)}")
