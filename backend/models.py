@@ -9,44 +9,54 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from datetime import datetime
 
+
+class BackendLLMConfig(BaseModel):
+    provider: str
+    api_key: str
+    model: str
+
 # ---------- /ask ----------
 
 class AskRequest(BaseModel):
     user_id: str
     question: str
-    topic: Optional[str] = None  # if None, topic is inferred from question
-
+    topic: Optional[str] = None # if None, topic is inferred from question
+    system_prompt: str
+    temperature: float
+    max_tokens: int
+    llm_config: BackendLLMConfig
+# Frontend expects 'content' for chat responses, align backend model
 class AskResponse(BaseModel):
-    explanation: str
+    content: str # Changed from 'explanation' to 'content' for frontend consistency
     topic: str
-
+    # Add other fields if explain_concept returns them, e.g., related_topics, confidence
 
 # ---------- /quiz ----------
 
-class QuizRequest(BaseModel):
-    user_id: str
-    topic: str
-    difficulty: Optional[str] = "medium"  # "easy", "medium", "hard"
-
-class Question(BaseModel):
+class QuizQuestion(BaseModel):
     question: str
-    options: List[str]
-    correct_index: Optional[int] = None  # hidden on frontend
+    options: List[Dict[str, str]] # List of dictionaries like {"id": "A", "text": "Option A"}
+    correctAnswerId: str # e.g., "A", "B"
+    feedback: str        # Explanation for the correct answer
 
-class QuizResponse(BaseModel):
-    questions: List[Question]
+# Model for generating a new quiz question (single question, LLM-driven)
+class QuizCreateRequest(BaseModel):
+    topic: str
+    difficulty: Optional[str] = "medium"
+    num_questions: Optional[int] = 1 # Default to 1 question for chat integration
+    user_id: str # Added user_id for logging/personalization
+    llm_config: BackendLLMConfig # This is essential for LLM-driven generation
+# Model for evaluating a quiz answer
 
-
-# ---------- /answer ----------
-
-class AnswerRequest(BaseModel):
+class QuizEvaluateRequest(BaseModel):
     user_id: str
     topic: str
-    questions: List[Question]
-    answers: List[int]  # list of selected indices
-
-class AnswerResponse(BaseModel):
-    score: float
+    question_index: int # Index of the question within the quiz context
+    user_answer: str    # The ID of the option selected by the user (e.g., 'A', 'B')
+    question: QuizQuestion 
+    num_questions: Optional[int] = 1 # Total number of questions in the context
+    difficulty: Optional[str] = "medium"
+    llm_config: Optional[BackendLLMConfig] # Optional LLM config for evaluation
 
 
 # ---------- /progress ----------
@@ -72,7 +82,7 @@ class TopicProgress(BaseModel):
 class OverallProgress(BaseModel):
     user_id: str
     overall_score: float
-    topics: list[TopicProgress]
+    topics: List[TopicProgress]
 
 
 # ---------- /reminders ----------
