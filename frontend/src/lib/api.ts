@@ -41,7 +41,7 @@ export interface QuizQuestionResponse {
  */
 export async function askAnything(
 	question: string,
-	userId: string,
+	username: string,
 	topic: string = "",
 	systemPrompt: string, // From Context & Settings
 	temperature: number,   // From Context & Settings
@@ -56,12 +56,12 @@ export async function askAnything(
 		},
 		body: JSON.stringify({
 			question,
-			user_id: userId,
+			username,
 			topic,
 			system_prompt: systemPrompt, // Match backend expected name if different
 			temperature,
 			max_tokens: maxTokens,       // Match backend expected name if different
-			llm_config: {                // Pass LLM config
+			llm_config: {
 				provider: llmConfig.provider,
 				api_key: llmConfig.apiKey,
 				model: llmConfig.model,
@@ -84,7 +84,7 @@ export async function askAnything(
 export async function getQuizQuestion(
 	topic: string,
 	difficulty: string, // You might want to make this configurable in UI
-	userId: string,
+	username: string,
 	llmConfig: LLMConfig
 ): Promise<QuizQuestionResponse> {
 	// This endpoint should be designed in your backend to generate a quiz question
@@ -97,7 +97,7 @@ export async function getQuizQuestion(
 		body: JSON.stringify({
 			topic,
 			difficulty,
-			user_id: userId, // Pass user_id for personalization/tracking
+			username,
 			llm_config: {
 				provider: llmConfig.provider,
 				api_key: llmConfig.apiKey,
@@ -200,8 +200,8 @@ export async function quizAsk({ topic, difficulty, num_questions, question_index
 
 // quizEvaluate - ensure it's compatible with new QuizQuestionResponse structure if quiz data comes from LLM
 // Also, passing LLM config might be useful for evaluation if evaluation is LLM-driven
-export async function quizEvaluate({ user_id, topic, question_index, user_answer, num_questions, difficulty, question, llmConfig }: {
-	user_id: string,
+export async function quizEvaluate({ username, topic, question_index, user_answer, num_questions, difficulty, question, llmConfig }: {
+	username: string,
 	topic: string,
 	question_index: number,
 	user_answer: string, // Changed to string to match option.id
@@ -210,11 +210,9 @@ export async function quizEvaluate({ user_id, topic, question_index, user_answer
 	question: unknown, // This 'question' parameter might need refinement based on your backend.
 	llmConfig?: LLMConfig // Optional LLM config for evaluation
 }) {
-	// Ensure question is structured as expected by your backend for evaluation
-	// If it's the QuizQuestionResponse from getQuizQuestion, ensure serialization is correct.
 	const body: Record<string, unknown> = {
-		question, // This should be the full question object, including correct answer for backend evaluation
-		user_id,
+		question,
+		username,
 		topic,
 		question_index,
 		user_answer,
@@ -229,27 +227,26 @@ export async function quizEvaluate({ user_id, topic, question_index, user_answer
 		};
 	}
 
-	const res = await fetch(`${BASE_URL}/quiz/evaluate`, // Changed to POST with body for more data
-		{
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(body)
-		});
+	const res = await fetch(`${BASE_URL}/quiz/evaluate`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(body)
+	});
 	if (!res.ok) throw new Error("Failed to evaluate quiz");
 	return res.json();
 }
 
 
 // No change needed for getUserTopics
-export async function getUserTopics(userId: string): Promise<string[]> {
-	const res = await fetch(`${BASE_URL}/topics/${encodeURIComponent(userId)}`);
+export async function getUserTopics(username: string): Promise<string[]> {
+	const res = await fetch(`${BASE_URL}/topics/${encodeURIComponent(username)}`);
 	if (!res.ok) throw new Error("Failed to fetch topics");
 	return res.json();
 }
 
 // Add a topic for a user
-export async function addUserTopic(userId: string, topic: string): Promise<void> {
-	const res = await fetch(`${BASE_URL}/topics/${encodeURIComponent(userId)}`, {
+export async function addUserTopic(username: string, topic: string): Promise<void> {
+	const res = await fetch(`${BASE_URL}/topics/${encodeURIComponent(username)}`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ topic }),
