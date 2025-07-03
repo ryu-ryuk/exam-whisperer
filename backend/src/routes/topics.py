@@ -1,28 +1,40 @@
-
 from fastapi import APIRouter, HTTPException
-import json
 from typing import List
+from db import SessionLocal
+from db_models import User, Topic
+from pydantic import BaseModel
 
 router = APIRouter()
 
-@router.get("/topics/{user_id}", response_model=List[str])
-def get_user_topics(user_id: str):
+class TopicCreate(BaseModel):
+    topic: str
+
+@router.get("/topics/{username}", response_model=List[str])
+def get_user_topics(username: str):
+    session = SessionLocal()
     try:
-        with open("data/latest_content.jsonl", "r", encoding="utf-8") as f:
-            lines = f.readlines()
-    except FileNotFoundError:
-        raise HTTPException(status_code=503, detail="Latest content data not found.")
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+        topics = session.query(Topic).filter_by(username=username).all()
+        return [t.topic_name for t in topics]
+    finally:
+        session.close()
 
-    topics = []
-    for line in lines:
-        try:
-            record = json.loads(line)
-            if record.get("user_id") == user_id and "topic" in record:
-                topics.append(record["topic"])
-        except json.JSONDecodeError:
-            continue
-
-    if not topics:
-        raise HTTPException(status_code=404, detail="No topics found for user.")
-
-    return sorted(set(topics))  # deduplicate + sort
+@router.post("/topics/{username}")
+def add_user_topic(username: str, topic_data: TopicCreate):
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+        # Check if topic already exists for user
+        existing = session.query(Topic).filter_by(username=username, topic_name=topic_data.topic).first()
+        if existing:
+            return {"message": "Topic already exists"}
+        topic = Topic(username=username, topic_name=topic_data.topic)
+        session.add(topic)
+        session.commit()
+        return {"message": "Topic added"}
+    finally:
+        session.close()
