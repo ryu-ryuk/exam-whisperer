@@ -71,7 +71,7 @@ export default function LandingPage() {
 						<a href="#how-it-works" className="text-[#bac2de] hover:text-[#f9e2af] transition-colors text-sm font-medium">
 							How it works
 						</a>
-						<a href="/chat" className="bg-[#cba6f7] text-[#1e1e2e] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#b4befe] transition-colors">
+						<a href="/dashboard" className="bg-[#cba6f7] text-[#1e1e2e] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#b4befe] transition-colors">
 							Get started
 						</a>
 					</div>
