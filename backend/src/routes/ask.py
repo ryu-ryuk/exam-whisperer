@@ -23,18 +23,18 @@ async def explain_route(request_data: AskRequest):
     Explain a concept using LLM with personalized settings.
     """
     try:
-
         topic_for_llm = request_data.topic if request_data.topic is not None else ""
         result = await explain_concept(
             question=request_data.question,
-            user_id=request_data.user_id,
+            username=request_data.username,
             topic=topic_for_llm,
             system_prompt=request_data.system_prompt,
             temperature=request_data.temperature,
             max_tokens=request_data.max_tokens,
             llm_config=request_data.llm_config
         )
-        log_user_event(request_data.user_id, "explain", request_data.topic, {"question": request_data.question, "response": result.get("content")})
+        
+        log_user_event(request_data.username, "explain", request_data.topic, {"question": request_data.question, "response": result.get("content")})
         return result
     except LLMProviderError as e:
         # Catch specific LLM errors and return 500 or 401 based on content of e
@@ -50,14 +50,14 @@ async def explain_route(request_data: AskRequest):
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/voice_ask")
-async def voice_ask_route(file: UploadFile, user_id: str, topic: str = ""):
+async def voice_ask_route(file: UploadFile, username: str, topic: str = ""):
     """
     accept voice input, transcribe, and explain using llm
     """
     try:
         audio_data = await file.read()
-        result = await voice_ask(audio_data, user_id, topic)
-        log_user_event(user_id, "voice_ask", topic, {"file": file.filename})
+        result = await voice_ask(audio_data, username, topic)
+        log_user_event(username, "voice_ask", topic, {"file": file.filename})
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
