@@ -1,19 +1,26 @@
 import pathway as pw
 
-
 # ===== SCHEMA DEFINITIONS =====
 class ContentSchema(pw.Schema):
-    user_id: str
+    username: str
     topic: str
     content: str
     timestamp: pw.DateTimeUtc
 
 
 class AttemptSchema(pw.Schema):
-    user_id: str
+    username: str
     topic: str
     score: float
     timestamp: pw.DateTimeUtc
+
+
+class UserEventSchema(pw.Schema):
+    username: str
+    event_type: str
+    topic: str
+    timestamp: pw.DateTimeUtc
+    details: dict
 
 
 def build_pathway_pipeline():
@@ -25,11 +32,15 @@ def build_pathway_pipeline():
         "data/topic_attempts.jsonl", schema=AttemptSchema
     )
     attempts = attempts.filter(pw.this.score != None)
+    user_events = pw.io.jsonlines.read(
+        "data/user_events.jsonl", schema=UserEventSchema
+    )
+
     # ===== KNOWLEDGE BASE PIPELINE =====
     max_ts_content = (
-        content_updates.groupby(content_updates.user_id, content_updates.topic)
+        content_updates.groupby(content_updates.username, content_updates.topic)
         .reduce(
-            user_id=pw.this.user_id,
+            username=pw.this.username,
             topic=pw.this.topic,
             max_timestamp=pw.reducers.max(content_updates.timestamp),
         )
@@ -39,12 +50,12 @@ def build_pathway_pipeline():
         content_updates
         .join(
             max_ts_content,
-            content_updates.user_id == max_ts_content.user_id,
+            content_updates.username == max_ts_content.username,
             content_updates.topic == max_ts_content.topic,
         )
         .filter(content_updates.timestamp == max_ts_content.max_timestamp)
         .select(
-            user_id=content_updates.user_id,
+            username=content_updates.username,
             topic=content_updates.topic,
             content=content_updates.content,
             updated_at=content_updates.timestamp,
@@ -55,9 +66,9 @@ def build_pathway_pipeline():
 
     # ===== PROGRESS PIPELINE =====
     last_ts = (
-        attempts.groupby(attempts.user_id, attempts.topic)
+        attempts.groupby(attempts.username, attempts.topic)
         .reduce(
-            user_id=pw.this.user_id,
+            username=pw.this.username,
             topic=pw.this.topic,
             last_attempt=pw.reducers.max(attempts.timestamp),
         )
@@ -67,12 +78,12 @@ def build_pathway_pipeline():
         attempts
         .join(
             last_ts,
-            attempts.user_id == last_ts.user_id,
+            attempts.username == last_ts.username,
             attempts.topic == last_ts.topic,
             attempts.timestamp == last_ts.last_attempt,
         )
         .select(
-            user_id=attempts.user_id,
+            username=attempts.username,
             topic=attempts.topic,
             latest_score=attempts.score,
             last_attempt=last_ts.last_attempt,
@@ -80,9 +91,9 @@ def build_pathway_pipeline():
     )
 
     average_scores = (
-        attempts.groupby(attempts.user_id, attempts.topic)
+        attempts.groupby(attempts.username, attempts.topic)
         .reduce(
-            user_id=pw.this.user_id,
+            username=pw.this.username,
             topic=pw.this.topic,
             average_score=pw.reducers.avg(attempts.score),
         )
@@ -92,11 +103,11 @@ def build_pathway_pipeline():
         latest_scores
         .join(
             average_scores,
-            latest_scores.user_id == average_scores.user_id,
+            latest_scores.username == average_scores.username,
             latest_scores.topic == average_scores.topic,
         )
         .select(
-            user_id=latest_scores.user_id,
+            username=latest_scores.username,
             topic=latest_scores.topic,
             latest_score=latest_scores.latest_score,
             average_score=average_scores.average_score,
@@ -119,8 +130,19 @@ def build_pathway_pipeline():
 
     pw.io.jsonlines.write(progress, filename="data/user_topic_progress.jsonl")
 
+    # ===== USER EVENTS PIPELINE =====
+    event_counts = (
+        user_events.groupby(user_events.username, user_events.event_type)
+        .reduce(
+            username=pw.this.username,
+            event_type=pw.this.event_type,
+            count=pw.reducers.count(),
+        )
+    )
+
+    pw.io.jsonlines.write(event_counts, filename="data/user_event_counts.jsonl")
+
 
 if __name__ == "__main__":
     build_pathway_pipeline()
     pw.run()
-

@@ -3,7 +3,7 @@ import json
 import os
 
 
-async def stream_topic_event(user_id: str, topic: str, score: float):
+async def stream_topic_event(username: str, topic: str, score: float):
     log_path = "data/topic_attempts.jsonl"
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
@@ -12,7 +12,7 @@ async def stream_topic_event(user_id: str, topic: str, score: float):
     timestamp = ts.isoformat()
     with open(log_path, "a") as f:
         f.write(json.dumps({
-            "user_id": user_id,
+            "username": username,
             "topic": topic,
             "score": score,
             "timestamp": timestamp
@@ -20,7 +20,7 @@ async def stream_topic_event(user_id: str, topic: str, score: float):
         f.write("\n")
 
 
-async def stream_content_event(user_id: str, topic: str, content: str):
+async def stream_content_event(username: str, topic: str, content: str):
     log_path = "data/content_updates.jsonl"
     # ensure the folder exists
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
@@ -34,7 +34,7 @@ async def stream_content_event(user_id: str, topic: str, content: str):
     # append one valid JSON object per line
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(json.dumps({
-            "user_id": user_id,
+            "username": username,
             "topic": topic,
             "content": content,
             "timestamp": timestamp
