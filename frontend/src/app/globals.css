@@ -151,3 +151,47 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar Theming */
+/* For Webkit-based browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 10px; /* Width of the vertical scrollbar */
+  height: 10px; /* Height of the horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #181825; /* Background of the scrollbar track */
+  border-radius: 5px; /* Rounded corners for the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #45475a; /* Color of the scrollbar thumb */
+  border-radius: 5px; /* Rounded corners for the thumb */
+  border: 2px solid #1e1e2e; /* Padding around the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #585b70; /* Color of the scrollbar thumb on hover */
+}
+
+/* For Firefox */
+html {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #45475a #181825; /* thumb color track color */
+}
+
+/* Optional: Apply to specific elements if not wanting global scrollbar styling */
+/* For example, for .overflow-y-auto elements only: */
+/*
+.overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #282a3a;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: #6272a4;
+    border-radius: 4px;
+    border: 1px solid #282a3a;
+}
+*/
