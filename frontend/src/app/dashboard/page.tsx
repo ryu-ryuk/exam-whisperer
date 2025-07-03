@@ -60,8 +60,8 @@ export default function DashboardPage() {
         try {
             await registerUser({ name, email, password });
             setSavedName(name);
-            localStorage.setItem("user_name", name);
-            localStorage.setItem("user_id", name); // Use username as user_id
+            localStorage.setItem("username", name);
+            localStorage.setItem("username", name);
             setEditing(false);
         } catch (e: any) {
             setErrors((prev) => ({ ...prev, email: e.message }));
