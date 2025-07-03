@@ -1,22 +1,17 @@
-// ChatPage: Exam Whisperer's grand chat UI for personalized study.
-// Features dynamic knowledge blocks (text, quiz), integrated LLM configuration,
-// syllabus upload, and a seamless topic management system.
-
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Brain, Send, User, ArrowLeft, Settings, Upload, FileText, X, Trash2, Volume2, MessageCircle, Lightbulb, Power, ChevronDown, WifiOff } from "lucide-react"
+import { Send, ArrowLeft, Settings, Upload, FileText, X, Volume2, Lightbulb, Power, ChevronDown, WifiOff, Sparkles, UserCircle2 } from "lucide-react"
+
 import Link from "next/link"
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm"
 import { askAnything, getQuizQuestion, textToSpeech, getUserTopics, LLMConfig, QuizQuestionResponse, BASE_URL, addUserTopic } from "@/lib/api"
 import { uploadSyllabus } from "@/lib/api-syllabus"
-
-// --- LLM Configuration Interface (re-exported from api.ts) ---
-// export interface LLMConfig { ... }
+import { CatppuccinToast } from "@/components/CatppuccinToast"
 
 // --- Quiz Question Interface (matches QuizQuestionResponse from api.ts) ---
 interface QuizQuestion {
@@ -43,9 +38,10 @@ interface QuizMessageCardProps {
 	quiz: QuizQuestion;
 	onAnswer: (messageId: string, answerId: string) => void;
 	messageId: string;
+	onNext?: () => void;
 }
 
-function QuizMessageCard({ quiz, onAnswer, messageId, onNext }: QuizMessageCardProps & { onNext?: () => void }) {
+function QuizMessageCard({ quiz, onAnswer, messageId, onNext }: QuizMessageCardProps) {
 	const [selectedOption, setSelectedOption] = useState<string | undefined>(quiz.userAnswerId);
 
 	const handleSubmit = () => {
@@ -58,10 +54,10 @@ function QuizMessageCard({ quiz, onAnswer, messageId, onNext }: QuizMessageCardP
 	const isCorrect = isSubmitted && selectedOption === quiz.correctAnswerId;
 
 	return (
-		<Card className="p-4 rounded-xl shadow-md text-base bg-[#313244] text-[#cdd6f4] border border-[#45475a] rounded-bl-none">
+		<Card className="p-4 rounded-[1.25rem] shadow-md text-base bg-[#313244] text-[#cdd6f4] border border-[#45475a] rounded-bl-none">
 			<CardHeader className="p-0 pb-3">
 				<CardTitle className="text-[#cdd6f4] flex items-center text-lg">
-					<Brain className="mr-2 h-5 w-5 text-[#a6e3a1]" />
+					<Sparkles className="mr-2 h-5 w-5 text-[#a6e3a1]" />
 					Practice Quiz
 				</CardTitle>
 			</CardHeader>
@@ -127,7 +123,6 @@ function QuizMessageCard({ quiz, onAnswer, messageId, onNext }: QuizMessageCardP
 
 // --- Main Chat Page Component ---
 export default function ChatPage() {
-	// Define a list of dynamic welcome messages
 	const welcomeMessages = [
 		"Hi there! I'm Whisper, your AI study companion. How can I help you today?",
 		"Hello! Ready to dive into your studies? I'm Whisper, here to assist you.",
@@ -136,7 +131,6 @@ export default function ChatPage() {
 		"Greetings! Need a quick explanation or a practice quiz? Whisper is at your service.",
 	];
 
-	// Function to get a random welcome message
 	const getRandomWelcomeMessage = () => {
 		const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
 		return welcomeMessages[randomIndex];
@@ -152,7 +146,6 @@ export default function ChatPage() {
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 
 	const [showContextModal, setShowContextModal] = useState(false);
-	const [contextDocs, setContextDocs] = useState<Array<{ id: string; name: string; content: string; type: string }>>([]);
 	const [systemPrompt, setSystemPrompt] = useState(
 		"You are Exam Whisperer, a helpful AI tutor. Provide clear, student-friendly explanations, and offer to generate quizzes where appropriate. Keep responses concise.",
 	);
@@ -164,17 +157,14 @@ export default function ChatPage() {
 	const [topicsLoading, setTopicsLoading] = useState(false);
 	const [showTopicDropdown, setShowTopicDropdown] = useState(false);
 	const [tempTopicInput, setTempTopicInput] = useState<string>("");
-	const dropdownJustOpened = useRef(false); // NEW: track if dropdown just opened
-	// --- User ID State (from dashboard/localStorage) ---
+
 	const [userId, setUserId] = useState<string>(() => {
 		if (typeof window !== 'undefined') {
 			return localStorage.getItem('user_id') || '';
 		}
 		return '';
 	});
-	// lazy loading topics
 	const [topicsLoaded, setTopicsLoaded] = useState(false);
-	// --- LLM Configuration States (loaded from/saved to localStorage safely) ---
 	const [llmProvider, setLlmProvider] = useState<string>(() => {
 		if (typeof window !== 'undefined') {
 			return localStorage.getItem('llmProvider') || 'gemini';
@@ -196,17 +186,17 @@ export default function ChatPage() {
 		}
 		return 'gemini-pro';
 	});
+	const [customOllamaModel, setCustomOllamaModel] = useState<string>("");
 
-	// Add Ollama to the LLM models and provider options
+	// Add gemma3 as the top Ollama model
 	const llmModels: { [key: string]: string[] } = {
 		'gemini': ['gemini-pro', 'gemini-1.5-pro-latest', 'gemini-1.5-flash-latest'],
 		'openai': ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4-turbo'],
 		'anthropic': ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240229'],
-		'ollama': ['llama2', 'mistral', 'phi', 'custom'],
+		'ollama': ['gemma3', 'llama2', 'mistral', 'phi', 'custom'], // gemma3 at top
 		'default': ['default-model']
 	};
 
-	// Save LLM settings to localStorage whenever they change
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
 			localStorage.setItem('llmProvider', llmProvider);
@@ -215,11 +205,9 @@ export default function ChatPage() {
 		}
 	}, [llmProvider, llmApiKey, llmModel]);
 
-	// --- Backend Health Check State & Effect (Robust Version) ---
 	const [isBackendOnline, setIsBackendOnline] = useState(true);
 
 	useEffect(() => {
-		// Ensure this effect only runs on the client-side
 		if (typeof window === 'undefined' || typeof document === 'undefined') {
 			return;
 		}
@@ -237,37 +225,33 @@ export default function ChatPage() {
 
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
-				checkBackendHealth(); // Re-check when tab becomes active
+				checkBackendHealth();
 			}
 		};
 
-		// Initial check on mount
 		checkBackendHealth();
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		// Function to start the retry mechanism
 		const startRetryMechanism = () => {
 			if (!retryInterval) {
 				retryInterval = setInterval(() => {
-					if (!isBackendOnline) { // Only re-check if currently offline
+					if (!isBackendOnline) {
 						checkBackendHealth();
-					} else if (retryInterval) { // Clear interval if backend comes back online
+					} else if (retryInterval) {
 						clearInterval(retryInterval);
 						retryInterval = null;
 					}
-				}, 15000); // Check every 15 seconds
+				}, 15000);
 			}
 		};
 
-		// This part starts/stops the retry mechanism when isBackendOnline changes
-		if (!isBackendOnline) { // If currently offline, ensure retry is running
+		if (!isBackendOnline) {
 			startRetryMechanism();
-		} else if (retryInterval) { // If online, ensure retry is stopped
+		} else if (retryInterval) {
 			clearInterval(retryInterval);
 			retryInterval = null;
 		}
 
-		// Cleanup function for useEffect
 		return () => {
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (retryInterval) {
@@ -275,10 +259,8 @@ export default function ChatPage() {
 				retryInterval = null;
 			}
 		};
-	}, [isBackendOnline]); // Dependency on isBackendOnline to react to status changes and manage retry interval
+	}, [isBackendOnline]);
 
-
-	// Effect to handle mobile viewport height (vh)
 	const chatContainerRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		const setDynamicHeight = () => {
@@ -291,7 +273,6 @@ export default function ChatPage() {
 		return () => window.removeEventListener('resize', setDynamicHeight);
 	}, []);
 
-	// Fetch user topics on component mount
 	useEffect(() => {
 		if (showTopicDropdown && !topicsLoaded && !topicsLoading) {
 			setTopicsLoading(true);
@@ -299,63 +280,62 @@ export default function ChatPage() {
 				.then((topics) => {
 					setUserTopics(topics);
 					if (topics.length > 0 && !userTopic) {
-						setUserTopic(topics[0]); // select first topic if available
+						setUserTopic(topics[0]);
 					}
-					setTopicsLoaded(true); // mark topics as loaded
+					setTopicsLoaded(true);
 				})
 				.catch((err) => {
 					console.error("failed to load topics:", err);
 					setUserTopics([]);
 					setUserTopic("");
-					setTopicsLoaded(false); // keep false to retry next time
+					setTopicsLoaded(false);
 				})
 				.finally(() => setTopicsLoading(false));
 		}
 	}, [showTopicDropdown, topicsLoaded, topicsLoading, userId, userTopic]);
 
-
-	// Scroll to bottom of messages whenever messages or typing content changes
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages, typingContent]);
 
-	// Simulates an API call to get a quiz question (now calls backend getQuizQuestion)
 	const getQuizQuestionBackend = useCallback(async (topic: string): Promise<QuizQuestionResponse> => {
-		const currentLlmConfig: LLMConfig = { provider: llmProvider, apiKey: llmApiKey, model: llmModel };
+		const currentLlmConfig: LLMConfig = { provider: llmProvider, apiKey: llmApiKey, model: llmProvider === 'ollama' && llmModel === 'custom' && customOllamaModel ? customOllamaModel : llmModel };
 		return getQuizQuestion(topic, "medium", userId, currentLlmConfig);
-	}, [llmProvider, llmApiKey, llmModel, userId]);
+	}, [llmProvider, llmApiKey, llmModel, userId, customOllamaModel]);
 
-	// Handle PDF Syllabus Upload (now integrated into topic dropdown)
+	const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: "", visible: false });
+
 	const handlePdfUpload = useCallback(async (file: File) => {
 		setUploading(true);
 		try {
-			const llmConfig = { provider: llmProvider, apiKey: llmApiKey, model: llmModel };
+			const llmConfig = { provider: llmProvider, apiKey: llmApiKey, model: llmProvider === 'ollama' && llmModel === 'custom' && customOllamaModel ? customOllamaModel : llmModel };
 			const result = await uploadSyllabus(file, userId, llmConfig);
-			alert(`Syllabus "${file.name}" uploaded successfully! Detected topics: ${result.topics?.join(', ') || 'None'}`);
+			const topicNames = Array.isArray(result.topics)
+				? result.topics.map((t: any) => (typeof t === 'string' ? t : t.topic || JSON.stringify(t))).join(', ')
+				: 'None';
+			setToast({ message: `Syllabus "${file.name}" uploaded successfully!\nDetected topics: ${topicNames}`, visible: true });
 			const updatedTopics = await getUserTopics(userId);
 			setUserTopics(updatedTopics);
 			if (updatedTopics.length > 0 && !userTopic) {
 				setUserTopic(updatedTopics[0]);
 			}
-			setShowTopicDropdown(false); // Close dropdown after upload
+			setShowTopicDropdown(false);
 		} catch (error) {
 			console.error("Error uploading syllabus:", error);
-			alert("Failed to upload syllabus. Please try again.");
+			setToast({ message: "Failed to upload syllabus. Please try again.", visible: true });
 		} finally {
 			setUploading(false);
 		}
-	}, [userId, userTopic, llmProvider, llmApiKey, llmModel]);
+	}, [llmProvider, llmApiKey, llmModel, userId, userTopic]);
 
-	// Main message submission handler
 	async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!input.trim()) return;
 
 		const userMessageContent = input.trim();
-		const currentLlmConfig: LLMConfig = { provider: llmProvider, apiKey: llmApiKey, model: llmModel };
+		const currentLlmConfig: LLMConfig = { provider: llmProvider, apiKey: llmApiKey, model: llmProvider === 'ollama' && llmModel === 'custom' && customOllamaModel ? customOllamaModel : llmModel };
 
-		// Basic check for API key
-		if (!llmApiKey) {
+		if ((llmProvider === 'gemini' || llmProvider === 'openai' || llmProvider === 'anthropic') && !llmApiKey) {
 			alert("Please set your LLM API Key in 'Context & Settings' to chat.");
 			setShowContextModal(true);
 			return;
@@ -418,13 +398,12 @@ export default function ChatPage() {
 		}
 	}
 
-	// Handles generating and displaying a quiz question
 	const handleGenerateQuiz = useCallback(async () => {
 		if (!userTopic) {
 			alert("Please select or enter a topic before taking a quiz.");
 			return;
 		}
-		if (!llmApiKey) {
+		if ((llmProvider === 'gemini' || llmProvider === 'openai' || llmProvider === 'anthropic') && !llmApiKey) {
 			alert("Please set your LLM API Key in 'Context & Settings' to generate quizzes.");
 			setShowContextModal(true);
 			return;
@@ -475,7 +454,6 @@ export default function ChatPage() {
 		}
 	}, [userTopic, llmApiKey, getQuizQuestionBackend, isBackendOnline]);
 
-	// Handle Enter key for sending messages
 	const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
@@ -488,11 +466,9 @@ export default function ChatPage() {
 		}
 	}, [input, isLoading]);
 
-	// --- Text-to-Speech Handling ---
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 
-	// Handle Text-to-Speech (now calling backend API)
 	const handleReadAloud = useCallback(async (text: string) => {
 		if (!llmApiKey) {
 			alert("Please set your LLM API Key in 'Context & Settings' to use Text-to-Speech.");
@@ -530,14 +506,10 @@ export default function ChatPage() {
 		}
 	}, []);
 
-	// Handle answer submission for a quiz message
 	const handleQuizAnswer = useCallback((messageId: string, selectedAnswerId: string) => {
 		setMessages(prevMessages =>
 			prevMessages.map(msg => {
 				if (msg.id === messageId && msg.type === 'quiz' && msg.quiz && !msg.quiz.submitted) {
-					// Optionally, send the answer to quizEvaluate if needed
-					// const quizQuestion = msg.quiz;
-					// quizEvaluate({ user_id: userId, topic: userTopic, question_index: 0, user_answer: selectedAnswerId, num_questions: 1, difficulty: "medium", question: quizQuestion, llmConfig: { provider: llmProvider, apiKey: llmApiKey, model: llmModel } });
 					return {
 						...msg,
 						quiz: {
@@ -552,14 +524,12 @@ export default function ChatPage() {
 		);
 	}, []);
 
-
-	// Context & Settings Modal Component (remains the same except for PDF upload section removal)
 	const ContextSettingsModal = () => (
 		<div className="fixed inset-0 bg-[#1e1e2e]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 			<Card className="bg-[#313244] border-[#45475a] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-				<CardHeader className="border-b border-[#45475a] flex flex-row items-center justify-between p-6">
-					<CardTitle className="text-[#cdd6f4] flex items-center text-2xl font-bold">
-						<Settings className="mr-3 h-6 w-6 text-[#cba6f7]" />
+				<CardHeader className="border-b border-[#45475a] flex flex-row items-center justify-between p-4 sm:p-6">
+					<CardTitle className="text-[#cdd6f4] flex items-center text-lg sm:text-2xl font-bold">
+						<Settings className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 text-[#cba6f7]" />
 						Context & Settings
 					</CardTitle>
 					<Button
@@ -571,23 +541,23 @@ export default function ChatPage() {
 						<X className="w-5 h-5" />
 					</Button>
 				</CardHeader>
-				<CardContent className="p-6 overflow-y-auto flex-grow">
-					<div className="space-y-8">
+				<CardContent className="p-4 sm:p-6 overflow-y-auto flex-grow">
+					<div className="space-y-6 sm:space-y-8">
 						{/* LLM Configuration Section */}
-						<div className="p-6 bg-[#181825] rounded-lg border border-[#313244] shadow-inner">
-							<h3 className="text-xl font-bold text-[#f9e2af] mb-4 flex items-center">
-								<Power className="mr-2 h-5 w-5 text-[#f9e2af]" />
+						<div className="p-4 sm:p-6 bg-[#181825] rounded-lg border border-[#313244] shadow-inner">
+							<h3 className="text-lg sm:text-xl font-bold text-[#f9e2af] mb-3 sm:mb-4 flex items-center">
+								<Power className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-[#f9e2af]" />
 								LLM Configuration
 							</h3>
-							<div className="space-y-4">
+							<div className="space-y-3 sm:space-y-4">
 								<div>
-									<label htmlFor="llm-provider" className="block text-[#cdd6f4] text-lg font-medium mb-2">
+									<label htmlFor="llm-provider" className="block text-[#cdd6f4] text-base sm:text-lg font-medium mb-1 sm:mb-2">
 										LLM Provider
 									</label>
 									<div className="relative">
 										<select
 											id="llm-provider"
-											className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] focus:outline-none focus:ring-2 focus:ring-[#cba6f7] appearance-none pr-10"
+											className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-2xl px-4 py-3 text-[#cdd6f4] focus:outline-none focus:ring-2 focus:ring-[#cba6f7] appearance-none pr-8 sm:pr-10"
 											value={llmProvider}
 											onChange={(e) => {
 												setLlmProvider(e.target.value);
@@ -600,17 +570,17 @@ export default function ChatPage() {
 											<option value="anthropic">Anthropic (Claude)</option>
 											<option value="ollama">Ollama (Local)</option>
 										</select>
-										<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#a6adc8] pointer-events-none" />
+										<ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-[#a6adc8] pointer-events-none" />
 									</div>
 								</div>
 								<div>
-									<label htmlFor="llm-api-key" className="block text-[#cdd6f4] text-lg font-medium mb-2">
+									<label htmlFor="llm-api-key" className="block text-[#cdd6f4] text-base sm:text-lg font-medium mb-1 sm:mb-2">
 										API Key
 									</label>
 									<input
 										id="llm-api-key"
 										type="password"
-										className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] focus:outline-none focus:ring-2 focus:ring-[#cba6f7]"
+										className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-2xl px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] focus:outline-none focus:ring-2 focus:ring-[#cba6f7]"
 										placeholder={`Enter your ${llmProvider} API key`}
 										value={llmApiKey}
 										onChange={(e) => setLlmApiKey(e.target.value)}
@@ -620,40 +590,61 @@ export default function ChatPage() {
 									</p>
 								</div>
 								<div>
-									<label htmlFor="llm-model" className="block text-[#cdd6f4] text-lg font-medium mb-2">
+									<label htmlFor="llm-model" className="block text-[#cdd6f4] text-base sm:text-lg font-medium mb-1 sm:mb-2">
 										Model
 									</label>
 									<div className="relative">
 										<select
 											id="llm-model"
-											className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] focus:outline-none focus:ring-2 focus:ring-[#cba6f7] appearance-none pr-10"
+											className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-2xl px-4 py-3 text-[#cdd6f4] focus:outline-none focus:ring-2 focus:ring-[#cba6f7] appearance-none pr-10"
 											value={llmModel}
-											onChange={(e) => setLlmModel(e.target.value)}
+											onChange={(e) => {
+												const value = e.target.value;
+												setLlmModel(value);
+												if (llmProvider === 'ollama' && value !== 'custom') {
+													setCustomOllamaModel("");
+												}
+											}}
 										>
 											{(llmModels[llmProvider] || llmModels['default']).map(model => (
 												<option key={model} value={model}>{model}</option>
 											))}
 										</select>
-										<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#a6adc8] pointer-events-none" />
+										<ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-[#a6adc8] pointer-events-none" />
 									</div>
+									{/* Show custom model input if ollama + custom selected */}
+									{llmProvider === 'ollama' && llmModel === 'custom' && (
+										<div className="mt-2">
+											<label htmlFor="custom-ollama-model" className="block text-[#cdd6f4] text-sm font-medium mb-1">Custom Model Name</label>
+											<input
+												id="custom-ollama-model"
+												type="text"
+												className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-2xl px-4 py-2 text-[#cdd6f4] placeholder-[#6c7086] focus:outline-none focus:ring-2 focus:ring-[#cba6f7]"
+												placeholder="Enter your custom Ollama model name (e.g. my-model)"
+												value={customOllamaModel}
+												onChange={e => setCustomOllamaModel(e.target.value)}
+												autoFocus
+											/>
+										</div>
+									)}
 								</div>
 							</div>
 						</div>
 
 						{/* System Instructions Section */}
 						<div>
-							<h3 className="text-xl font-semibold text-[#cdd6f4] mb-4">System Instructions</h3>
+							<h3 className="text-lg sm:text-xl font-semibold text-[#cdd6f4] mb-3 sm:mb-4">System Instructions</h3>
 							<textarea
 								value={systemPrompt}
 								onChange={(e) => setSystemPrompt(e.target.value)}
 								placeholder="Define how the AI should behave and respond..."
-								className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] resize-none focus:outline-none focus:ring-2 focus:ring-[#cba6f7] focus:border-transparent min-h-[120px] text-base"
+								className="w-full bg-[#1e1e2e] border border-[#45475a] rounded-2xl px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] resize-none focus:outline-none focus:ring-2 focus:ring-[#cba6f7] focus:border-transparent min-h-[100px] sm:min-h-[120px] text-base"
 							/>
-							<p className="text-[#6c7086] text-sm mt-2">Guides the AI's persona and general behavior.</p>
+							<p className="text-[#6c7086] text-xs sm:text-sm mt-2">Guides the AI's persona and general behavior.</p>
 						</div>
-						<div className="grid md:grid-cols-2 gap-8">
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
 							<div>
-								<label className="block text-[#cdd6f4] text-lg font-medium mb-3">Temperature: {temperature.toFixed(1)}</label>
+								<label className="block text-[#cdd6f4] text-base sm:text-lg font-medium mb-2 sm:mb-3">Temperature: {temperature.toFixed(1)}</label>
 								<input
 									type="range"
 									min="0"
@@ -661,12 +652,12 @@ export default function ChatPage() {
 									step="0.1"
 									value={temperature}
 									onChange={(e) => setTemperature(Number.parseFloat(e.target.value))}
-									className="w-full h-2 bg-[#45475a] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-[#cba6f7] [&::-moz-range-thumb]:bg-[#cba6f7] [&::-webkit-slider-thumb]:appearance-none [&::-moz-range-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
+									className="w-full h-2 bg-[#45475a] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-[#cba6f7] [&::-moz-range-thumb]:bg-[#cba6f7] [&::-webkit-slider-thumb]:appearance-none [&::-moz-range-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
 								/>
-								<p className="text-[#6c7086] text-sm mt-2">Controls creativity (0 = focused, 1 = creative)</p>
+								<p className="text-[#6c7086] text-xs sm:text-sm mt-2">Controls creativity (0 = focused, 1 = creative)</p>
 							</div>
 							<div>
-								<label className="block text-[#cdd6f4] text-lg font-medium mb-3">Max Tokens: {maxTokens}</label>
+								<label className="block text-[#cdd6f4] text-base sm:text-lg font-medium mb-2 sm:mb-3">Max Tokens: {maxTokens}</label>
 								<input
 									type="range"
 									min="100"
@@ -674,82 +665,17 @@ export default function ChatPage() {
 									step="50"
 									value={maxTokens}
 									onChange={(e) => setMaxTokens(Number.parseInt(e.target.value))}
-									className="w-full h-2 bg-[#45475a] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-[#89b4fa] [&::-moz-range-thumb]:bg-[#89b4fa] [&::-webkit-slider-thumb]:appearance-none [&::-moz-range-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
+									className="w-full h-2 bg-[#45475a] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-[#89b4fa] [&::-moz-range-thumb]:bg-[#89b4fa] [&::-webkit-slider-thumb]:appearance-none [&::-moz-range-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
 								/>
-								<p className="text-[#6c7086] text-xs mt-2">Maximum response length</p>
+								<p className="text-[#6c7086] text-xs sm:text-sm mt-2">Maximum response length</p>
 							</div>
 						</div>
-						{/* Reference Documents section has been moved */}
-						{/* <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-semibold text-[#cdd6f4]">Reference Documents</h3>
-                                <Button
-                                    size="sm"
-                                    className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] font-medium"
-                                    disabled={uploading}
-                                    onClick={() => {
-                                        const input = document.createElement("input")
-                                        input.type = "file"
-                                        input.accept = ".pdf"
-                                        input.onchange = (e) => {
-                                            const file = (e.target as HTMLInputElement).files?.[0]
-                                            if (file) {
-                                                handlePdfUpload(file)
-                                            }
-                                        }
-                                        input.click()
-                                    }}
-                                >
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    {uploading ? "Uploading..." : "Upload PDF Syllabus"}
-                                </Button>
-                            </div>
-                            {contextDocs.length === 0 ? (
-                                <div className="bg-[#1e1e2e]/50 border border-[#313244] rounded-lg p-8 text-center flex flex-col items-center justify-center">
-                                    <FileText className="w-12 h-12 text-[#a6adc8] mx-auto mb-4" />
-                                    <p className="text-[#cdd6f4] mb-2 font-medium">No documents uploaded</p>
-                                    <p className="text-[#a6adc8] text-sm">Upload documents for the AI to reference in responses</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {contextDocs.map((doc) => (
-                                        <div key={doc.id} className="bg-[#1e1e2e]/50 border border-[#313244] rounded-lg p-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center space-x-3">
-                                                    <FileText className="w-5 h-5 text-[#89b4fa]" />
-                                                    <div>
-                                                        <p className="text-[#cdd6f4] font-medium">{doc.name}</p>
-                                                        <p className="text-[#a6adc8] text-sm">
-                                                            {doc.content.length} characters • {doc.type}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setContextDocs((prev) => prev.filter((d) => d.id !== doc.id))}
-                                                    className="text-[#f38ba8] hover:text-[#e67a95] hover:bg-[#f38ba8]/10"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                            <div className="bg-[#313244] rounded p-3 max-h-32 overflow-y-auto text-[#bac2de] text-sm">
-                                                <p className="whitespace-pre-wrap">
-                                                    {doc.content.slice(0, 200)}
-                                                    {doc.content.length > 200 && "..."}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div> */}
 						<div>
-							<h3 className="text-xl font-semibold text-[#cdd6f4] mb-4">Quick Templates</h3>
-							<div className="grid md:grid-cols-2 gap-4">
+							<h3 className="text-lg sm:text-xl font-semibold text-[#cdd6f4] mb-3 sm:mb-4">Quick Templates</h3>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 								<Button
 									variant="outline"
-									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-3"
+									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-2 sm:py-3 text-sm sm:text-base"
 									onClick={() =>
 										setSystemPrompt(
 											"You are a math tutor. Break down complex problems step-by-step and explain the reasoning behind each step.",
@@ -760,7 +686,7 @@ export default function ChatPage() {
 								</Button>
 								<Button
 									variant="outline"
-									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-3"
+									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-2 sm:py-3 text-sm sm:text-base"
 									onClick={() =>
 										setSystemPrompt(
 											"You are a science teacher. Use analogies and real-world examples to explain scientific concepts clearly.",
@@ -771,7 +697,7 @@ export default function ChatPage() {
 								</Button>
 								<Button
 									variant="outline"
-									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-3"
+									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-2 sm:py-3 text-sm sm:text-base"
 									onClick={() =>
 										setSystemPrompt(
 											"You are a writing coach. Help improve essays, grammar, and writing style with constructive feedback.",
@@ -782,7 +708,7 @@ export default function ChatPage() {
 								</Button>
 								<Button
 									variant="outline"
-									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-3"
+									className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] justify-start text-left h-auto py-2 sm:py-3 text-sm sm:text-base"
 									onClick={() =>
 										setSystemPrompt(
 											"You are a quiz master. Create engaging questions and provide detailed explanations for answers.",
@@ -795,17 +721,17 @@ export default function ChatPage() {
 						</div>
 					</div>
 				</CardContent>
-				<div className="border-t border-[#45475a] p-6 flex justify-end space-x-4">
+				<div className="border-t border-[#45475a] p-4 sm:p-6 flex justify-end space-x-3 sm:space-x-4">
 					<Button
 						variant="outline"
 						onClick={() => setShowContextModal(false)}
-						className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] font-medium"
+						className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] font-medium text-sm sm:text-base"
 					>
 						Cancel
 					</Button>
 					<Button
 						onClick={() => setShowContextModal(false)}
-						className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] font-medium"
+						className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] font-medium text-sm sm:text-base"
 					>
 						Save Settings
 					</Button>
@@ -814,377 +740,401 @@ export default function ChatPage() {
 		</div>
 	);
 
-	// Optionally, add a useEffect to redirect to dashboard if userId is not set
-	/* useEffect(() => {
-		if (!userId) {
-			window.location.href = "/dashboard";
-		}
-	}, [userId]); */
-
 	return (
-		<div ref={chatContainerRef} className="min-h-screen bg-[#1e1e2e] text-[#cdd6f4] flex flex-col relative overflow-hidden">
-			{/* Animated background elements (from Landing Page Hero Section) */}
-			<div className="absolute inset-0 overflow-hidden pointer-events-none">
-				<div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#cba6f7]/5 rounded-full blur-xl animate-pulse"></div>
-				<div className="absolute top-3/4 right-1/4 w-24 h-24 bg-[#89b4fa]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-				<div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-[#a6e3a1]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-			</div>
-
-			{/* Header */}
-			<header className="bg-[#1e1e2e]/80 backdrop-blur-sm border-b border-[#313244] p-4 flex-shrink-0 z-10">
-				<div className="max-w-7xl mx-auto flex items-center justify-between">
-					<div className="flex items-center space-x-4">
-						<Link href="/">
-							<Button variant="ghost" size="sm" className="text-[#cdd6f4] hover:bg-[#313244] px-3 py-2">
-								<ArrowLeft className="w-4 h-4 mr-2" />
-								Back
-							</Button>
-						</Link>
-						<div className="flex items-center space-x-2">
-							<div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
-								<Brain className="h-5 w-5 text-[#1e1e2e]" />
-							</div>
-							<span className="text-xl font-semibold text-[#f9e2af]">Exam Whisperer</span>
-						</div>
-					</div>
-					<div className="flex items-center space-x-4">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setShowContextModal(true)}
-							className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] px-3 py-2"
-						>
-							<Settings className="w-4 h-4 mr-2" />
-							Context & Settings
-						</Button>
-						{/* Backend Status Indicator */}
-						<div className="inline-flex items-center space-x-2 bg-[#313244] px-3 py-1 rounded-full">
-							<div className={`w-2 h-2 rounded-full animate-pulse ${isBackendOnline ? 'bg-[#a6e3a1]' : 'bg-[#f38ba8]'}`}></div>
-							<span className={`text-sm ${isBackendOnline ? 'text-[#a6e3a1]' : 'text-[#f38ba8]'}`}>
-								{isBackendOnline ? "Online" : "Offline"}
-							</span>
-							{!isBackendOnline && <WifiOff className="w-3 h-3 text-[#f38ba8] ml-1" />}
-						</div>
-					</div>
+		<>
+			{toast.visible && (
+				<CatppuccinToast message={toast.message} onClose={() => setToast({ ...toast, visible: false })} />
+			)}
+			<div ref={chatContainerRef} className="min-h-screen bg-[#1e1e2e] text-[#cdd6f4] flex flex-col relative overflow-hidden">
+				{/* Animated background elements (from Landing Page Hero Section) */}
+				<div className="absolute inset-0 overflow-hidden pointer-events-none">
+					<div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#cba6f7]/5 rounded-full blur-xl animate-pulse"></div>
+					<div className="absolute top-3/4 right-1/4 w-24 h-24 bg-[#89b4fa]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+					<div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-[#a6e3a1]/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
 				</div>
-			</header>
 
-			{/* Main Chat Content Area */}
-			{/* Expanded px-6 and py-10 for more spacious look */}
-			<div className="flex-1 overflow-y-auto px-6 py-10 relative z-10 flex flex-col justify-end">
-				<div className="max-w-4xl mx-auto flex flex-col h-full">
-					{/* Chat Messages */}
-					<div className="flex-1 overflow-y-auto pr-2 pb-4">
-						<div className="space-y-4">
-							{messages.map((message) => (
-								<div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-									<div className={`flex items-start space-x-3 max-w-full sm:max-w-[90%] ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""}`}>
-										<div
-											className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-[#cba6f7]" : "bg-[#89b4fa]"}`}
-										>
-											{message.role === "user" ? (
-												<User className="w-5 h-5 text-[#1e1e2e]" />
-											) : (
-												<Brain className="w-5 h-5 text-[#1e1e2e]" />
-											)}
-										</div>
+				{/* Header */}
+				<header className="bg-[#1e1e2e]/80 backdrop-blur-sm border-b border-[#313244] p-3 flex-shrink-0 z-10">
+					<div className="max-w-7xl mx-auto flex items-center justify-between">
+						<div className="flex items-center space-x-2 sm:space-x-4">
+							<Link href="/">
+								<Button variant="ghost" size="sm" className="text-[#cdd6f4] hover:bg-[#313244] px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm">
+									<ArrowLeft className="w-3 h-3 mr-1 sm:w-4 sm:h-4 sm:mr-2" />
+									Back
+								</Button>
+							</Link>
+							<div className="flex items-center space-x-1 sm:space-x-2">
+								<div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
+									<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-[#1e1e2e]" />
+								</div>
+								<span className="text-base sm:text-xl font-semibold text-[#f9e2af]">Exam Whisperer</span>
+							</div>
+						</div>
+						<div className="flex items-center space-x-2 sm:space-x-4">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setShowContextModal(true)}
+								className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#383a59] px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm"
+							>
+								<Settings className="w-3 h-3 mr-1 sm:w-4 sm:h-4 sm:mr-2" />
+								Settings
+							</Button>
+							{/* Backend Status Indicator */}
+							<div className="inline-flex items-center space-x-1 bg-[#313244] px-2 py-1 rounded-full">
+								<div className={`w-2 h-2 rounded-full animate-pulse ${isBackendOnline ? 'bg-[#a6e3a1]' : 'bg-[#f38ba8]'}`}></div>
+								<span className={`text-xs ${isBackendOnline ? 'text-[#a6e3a1]' : 'text-[#f38ba8]'}`}>
+									{isBackendOnline ? "Online" : "Offline"}
+								</span>
+								{!isBackendOnline && <WifiOff className="w-3 h-3 text-[#f38ba8] ml-1" />}
+							</div>
+						</div>
+					</div>
+				</header>
 
-										{/* Render message based on type */}
-										{message.type === "text" && (
-											<Card
-												className={`p-4 rounded-xl shadow-md text-base ${message.role === "user" ? "bg-[#cba6f7] text-[#1e1e2e] rounded-br-none" : "bg-[#313244] text-[#cdd6f4] border border-[#45475a] rounded-bl-none"}`}
+				{/* Main Chat Content Area */}
+				<div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-10 relative z-10 flex flex-col justify-end">
+					<div className="max-w-4xl mx-auto flex flex-col h-full w-full">
+						{/* Chat Messages */}
+						<div className="flex-1 overflow-y-auto pr-1 sm:pr-2 pb-4">
+							<div className="space-y-4">
+								{messages.map((message) => (
+									<div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+										<div className={`flex items-start space-x-2 sm:space-x-3 max-w-[95%] sm:max-w-[90%] ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""}`}>
+											<div
+												className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-[#cba6f7]" : "bg-[#89b4fa]"}`}
 											>
-												<div className="whitespace-pre-wrap flex flex-col gap-2">
-													<ReactMarkdown
-														remarkPlugins={[remarkGfm]} // Enable GitHub Flavored Markdown (tables, task lists, strikethrough)
-														components={{
-															// Custom rendering for code blocks to add proper styling
-															code(props) {
-																const { className, children, node, ...rest } = props;
-																const isInline = node?.tagName !== 'code';
+												{message.role === "user" ? (
+													<UserCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#1e1e2e]" />
+												) : (
+													<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#1e1e2e]" />
+												)}
+											</div>
 
-																const match = /language-(\w+)/.exec(className || '');
-																return !isInline ? (
-																	<pre className="p-2 rounded-md bg-[#1e1e2e] overflow-x-auto text-[#cdd6f4] border border-[#45475a] my-2">
-																		<code className={className} {...rest}>{children}</code>
-																	</pre>
-																) : (
-																	<code className="bg-[#45475a]/50 text-[#cba6f7] rounded px-1 py-0.5" {...rest}>{children}</code>
-																);
-															},
-														}}
-													>{message.content || ''}</ReactMarkdown>
-													{message.role === "assistant" && (
-														<div className="flex gap-2 mt-2">
-															<Button
-																variant="outline"
-																size="sm"
-																className="w-fit bg-[#45475a] border-[#45475a] text-[#cdd6f4] hover:bg-[#585b70] hover:text-[#cdd6f4] text-xs px-2 py-1 transition-colors duration-200"
-																disabled={isSpeaking}
-																onClick={() => message.content && handleReadAloud(message.content)}
-															>
-																<Volume2 className="w-3 h-3 mr-1" />
-																{isSpeaking ? "Speaking..." : "Read Aloud"}
-															</Button>
-															{isSpeaking && (
+											{/* Render message based on type */}
+											{message.type === "text" && (
+												<Card
+													// Ensure these rounded classes are correctly applied for iOS-like bubbles
+													className={`p-3 sm:p-4 rounded-[1.25rem] shadow-md text-sm sm:text-base ${message.role === "user"
+														? "bg-[#cba6f7] text-[#1e1e2e] rounded-br-[0.3rem]" // User bubbles
+														: "bg-[#313244] text-[#cdd6f4] border border-[#45475a] rounded-bl-[0.3rem]" // Assistant bubbles
+														}`}
+												>
+													<div className="whitespace-pre-wrap flex flex-col gap-2">
+														<ReactMarkdown
+															remarkPlugins={[remarkGfm]}
+															components={{
+																code(props) {
+																	const { className, children, node, ...rest } = props;
+																	const isInline = node?.tagName !== 'code';
+
+																	const match = /language-(\w+)/.exec(className || '');
+																	return !isInline ? (
+																		<pre className="p-2 rounded-md bg-[#1e1e2e] overflow-x-auto text-[#cdd6f4] border border-[#45475a] my-2 text-xs sm:text-sm">
+																			<code className={className} {...rest}>{children}</code>
+																		</pre>
+																	) : (
+																		<code className="bg-[#45475a]/50 text-[#cba6f7] rounded px-1 py-0.5 text-xs sm:text-sm" {...rest}>{children}</code>
+																	);
+																},
+															}}
+														>{message.content || ''}</ReactMarkdown>
+														{message.role === "assistant" && (
+															<div className="flex gap-2 mt-2">
 																<Button
 																	variant="outline"
 																	size="sm"
-																	className="w-fit bg-[#f38ba8] border-[#f38ba8] text-[#1e1e2e] hover:bg-[#f38ba8]/80 text-xs px-2 py-1 transition-colors duration-200"
-																	onClick={handleStopSpeaking}
+																	className="w-fit bg-[#45475a] border-[#45475a] text-[#cdd6f4] hover:bg-[#585b70] hover:text-[#cdd6f4] text-xs px-2 py-1 transition-colors duration-200"
+																	disabled={isSpeaking}
+																	onClick={() => message.content && handleReadAloud(message.content)}
 																>
-																	Stop
+																	<Volume2 className="w-3 h-3 mr-1" />
+																	{isSpeaking ? "Speaking..." : "Read Aloud"}
 																</Button>
-															)}
-														</div>
-													)}
-												</div>
-												<div
-													className={`text-xs mt-2 opacity-70 ${message.role === "user" ? "text-[#1e1e2e]/70" : "text-[#a6adc8]"}`}
-												>
-													{message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-												</div>
-											</Card>
-										)}
-
-										{message.type === "quiz" && message.quiz && (
-											<QuizMessageCard quiz={message.quiz} onAnswer={handleQuizAnswer} messageId={message.id} onNext={async () => {
-												setIsLoading(true);
-												setTypingContent("Generating next quiz question...");
-												try {
-													const quizDataResponse = await getQuizQuestionBackend(userTopic);
-													setMessages((prev) => [
-														...prev,
-														{
-															id: `assistant-quiz-${Date.now()}`,
-															quiz: {
-																question: quizDataResponse.question,
-																options: quizDataResponse.options,
-																correctAnswerId: quizDataResponse.correctAnswerId,
-																feedback: quizDataResponse.feedback,
-																submitted: false,
-															},
-															role: "assistant",
-															timestamp: new Date(),
-															type: "quiz",
-														},
-													]);
-												} catch (error) {
-													console.error("Error generating quiz:", error);
-													const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred.";
-													setMessages((prev) => [
-														...prev,
-														{
-															id: `error-quiz-${Date.now()}`,
-															content: `Sorry, I couldn't generate a quiz. Error: ${errorMessage}. Please try again.`,
-															role: "assistant",
-															timestamp: new Date(),
-															type: "text",
-														},
-													]);
-												} finally {
-													setIsLoading(false);
-													setTypingContent("");
-												}
-											}} />
-										)}
-									</div>
-								</div>
-							))}
-
-							{/* Typing Indicator */}
-							{(isLoading || typingContent) && (
-								<div className="flex justify-start">
-									<div className="flex items-start space-x-3 max-w-full sm:max-w-[80%]">
-										<div className="w-9 h-9 rounded-full bg-[#89b4fa] flex items-center justify-center flex-shrink-0">
-											<Brain className="w-5 h-5 text-[#1e1e2e]" />
-										</div>
-										<Card className="p-4 rounded-xl shadow-md text-base bg-[#313244] text-[#cdd6f4] border border-[#45475a] rounded-bl-none">
-											{typingContent ? (
-												<div className="whitespace-pre-wrap">
-													{typingContent}
-													<span className="animate-pulse">|</span>
-												</div>
-											) : (
-												<div className="flex items-center space-x-2">
-													<div className="flex space-x-1">
-														<div className="w-2 h-2 bg-[#b4befe] rounded-full animate-bounce"></div>
-														<div className="w-2 h-2 bg-[#b4befe] rounded-full animate-bounce delay-100"></div>
-														<div className="w-2 h-2 bg-[#b4befe] rounded-full animate-bounce delay-200"></div>
+																{isSpeaking && (
+																	<Button
+																		variant="outline"
+																		size="sm"
+																		className="w-fit bg-[#f38ba8] border-[#f38ba8] text-[#1e1e2e] hover:bg-[#f38ba8]/80 text-xs px-2 py-1 transition-colors duration-200"
+																		onClick={handleStopSpeaking}
+																	>
+																		Stop
+																	</Button>
+																)}
+															</div>
+														)}
 													</div>
-													<span className="text-[#a6adc8] text-sm">Thinking...</span>
-												</div>
+													<div
+														className={`text-xs mt-2 opacity-70 ${message.role === "user" ? "text-[#1e1e2e]/70" : "text-[#a6adc8]"}`}
+													>
+														{message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+													</div>
+												</Card>
 											)}
-										</Card>
-									</div>
-								</div>
-							)}
-							<div ref={messagesEndRef} />
-						</div>
-					</div>
 
-					{/* Input Area - now always at the bottom */}
-					<div className="p-4 bg-[#1e1e2e]/80 backdrop-blur-sm border border-[#313244] rounded-lg mb-4 flex-shrink-0 mt-auto">
-						{/* Topic Selection & Quiz Controls */}
-						<div className="mb-3 flex flex-wrap justify-between items-center gap-2">
-							{/* Topic Selector - Always visible for quick access */}
-							<div className="relative flex items-center gap-2 flex-grow sm:flex-grow-0">
-								<Badge className="bg-[#313244] text-[#cdd6f4] border-[#45475a] px-3 py-1 font-medium">Topic</Badge>
-								<Button
-									variant="outline"
-									className="bg-[#313244] text-[#cdd6f4] border-[#45475a] hover:bg-[#383a59] px-4 py-2 text-sm relative"
-									onClick={() => {
-										setShowTopicDropdown(true);
-									}}
-									disabled={topicsLoading}
-								>
-									{topicsLoading ? (
-										"Loading..."
-									) : (
-										<>
-											{userTopic || "Select/Type Topic"}
-											<ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showTopicDropdown ? 'rotate-180' : ''}`} />
-										</>
-									)}
-								</Button>
-								{/* Dynamic Topic Dropdown/Input Overlay */}
-								{showTopicDropdown && (
-									<div
-										className="fixed inset-0 z-10"
-										onClick={() => setShowTopicDropdown(false)}
+											{message.type === "quiz" && message.quiz && (
+												<QuizMessageCard quiz={message.quiz} onAnswer={handleQuizAnswer} messageId={message.id} onNext={async () => {
+													setIsLoading(true);
+													setTypingContent("Generating next quiz question...");
+													try {
+														const quizDataResponse = await getQuizQuestionBackend(userTopic);
+														setMessages((prev) => [
+															...prev,
+															{
+																id: `assistant-quiz-${Date.now()}`,
+																quiz: {
+																	question: quizDataResponse.question,
+																	options: quizDataResponse.options,
+																	correctAnswerId: quizDataResponse.correctAnswerId,
+																	feedback: quizDataResponse.feedback,
+																	submitted: false,
+																},
+																role: "assistant",
+																timestamp: new Date(),
+																type: "quiz",
+															},
+														]);
+													} catch (error) {
+														console.error("Error generating quiz:", error);
+														const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred.";
+														setMessages((prev) => [
+															...prev,
+															{
+																id: `error-quiz-${Date.now()}`,
+																content: `Sorry, I couldn't generate a quiz. Error: ${errorMessage}. Please try again.`,
+																role: "assistant",
+																timestamp: new Date(),
+																type: "text",
+															},
+														]);
+													} finally {
+														setIsLoading(false);
+														setTypingContent("");
+													}
+												}} />
+											)}
+										</div>
+									</div>
+								))}
+
+								{/* Typing Indicator */}
+								{(isLoading || typingContent) && (
+									<div className="flex justify-start">
+										<div className="flex items-start space-x-2 sm:space-x-3 max-w-[95%] sm:max-w-[80%]">
+											<div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#89b4fa] flex items-center justify-center flex-shrink-0">
+												<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#1e1e2e]" />
+											</div>
+											<Card className="p-3 sm:p-4 rounded-[1.25rem] shadow-md text-sm sm:text-base bg-[#313244] text-[#cdd6f4] border border-[#45475a] rounded-bl-[0.3rem]">
+												{typingContent ? (
+													<div className="whitespace-pre-wrap">
+														{typingContent}
+														<span className="animate-pulse">|</span>
+													</div>
+												) : (
+													<div className="flex items-center space-x-2">
+														<div className="flex space-x-1">
+															<div className="w-2 h-2 bg-[#b4befe] rounded-full animate-bounce"></div>
+															<div className="w-2 h-2 bg-[#b4befe] rounded-full animate-bounce delay-100"></div>
+															<div className="w-2 h-2 bg-[#b4befe] rounded-full animate-bounce delay-200"></div>
+														</div>
+														<span className="text-[#a6adc8] text-sm">Thinking...</span>
+													</div>
+												)}
+											</Card>
+										</div>
+									</div>
+								)}
+								<div ref={messagesEndRef} />
+							</div>
+						</div>
+
+						{/* Input Area - now always at the bottom */}
+						<div className="p-3 bg-[#1e1e2e]/80 backdrop-blur-sm border border-[#313244] rounded-lg mb-3 flex-shrink-0 mt-auto">
+							{/* Topic Selection & Quiz Controls */}
+							<div className="mb-3 flex flex-wrap justify-between items-center gap-2">
+								{/* Topic Selector - Always visible for quick access */}
+								<div className="relative flex items-center gap-2 flex-grow">
+									<Badge className="bg-[#313244] text-[#cdd6f4] border-[#45475a] px-2 py-0.5 sm:px-3 sm:py-1 font-medium text-xs sm:text-sm">Topic</Badge>
+									<Button
+										variant="outline"
+										className="bg-[#313244] text-[#cdd6f4] border-[#45475a] hover:bg-[#383a59] px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm relative w-full sm:w-auto"
+										onClick={() => {
+											setShowTopicDropdown(true);
+											setTempTopicInput(userTopic);
+										}}
+										disabled={topicsLoading}
 									>
+										{topicsLoading ? (
+											"Loading..."
+										) : (
+											<>
+												<span className="truncate">{userTopic || "Select/Type Topic"}</span>
+												<ChevronDown className={`ml-1 h-3 w-3 sm:ml-2 sm:h-4 sm:w-4 transition-transform ${showTopicDropdown ? 'rotate-180' : ''}`} />
+											</>
+										)}
+									</Button>
+									{/* Dynamic Topic Dropdown/Input Overlay */}
+									{showTopicDropdown && (
+										// This is the full-screen overlay that handles clicks outside the popup
 										<div
-											className="absolute bottom-full left-0 mb-2 w-full max-w-xs bg-[#313244] border border-[#45475a] rounded-lg shadow-lg p-3 z-20"
-											onClick={e => e.stopPropagation()} // Prevent click from closing dropdown
+											className="fixed inset-0 z-20" // Use fixed inset-0 to cover the whole screen
+											onClick={() => setShowTopicDropdown(false)} // Click anywhere on this overlay to close
 										>
-											{userTopics.length > 0 && (
-												<>
-													<label htmlFor="topic-select-dropdown" className="block text-[#bac2de] text-xs font-medium mb-1">
-														Choose existing:
+											{/* This is the actual popup content, positioned relative to the button below */}
+											<div
+												className="absolute left-0 bottom-full mb-2 z-30 w-full sm:w-80 bg-[#313244] border border-[#45475a] rounded-lg shadow-lg p-4"
+												onClick={e => e.stopPropagation()} // Prevent clicks inside the popup from closing it
+											>
+												<h4 className="text-lg font-bold text-[#cdd6f4] mb-3">Manage Topics</h4>
+												{userTopics.length > 0 && (
+													<div className="mb-4">
+														<label htmlFor="topic-select-dropdown" className="block text-[#bac2de] text-sm font-medium mb-1">
+															Choose existing topic:
+														</label>
+														<select
+															id="topic-select-dropdown"
+															className="w-full bg-[#1e1e2e] border border-[#45475a] rounded px-3 py-2 text-[#cdd6f4] text-sm focus:outline-none focus:ring-1 focus:ring-[#cba6f7]"
+															value={tempTopicInput}
+															onChange={e => setTempTopicInput(e.target.value)}
+														>
+															<option value="">-- Select --</option>
+															{userTopics.map((topic) => (
+																<option key={topic} value={topic}>{topic}</option>
+															))}
+														</select>
+													</div>
+												)}
+												<div className="mb-4">
+													<label htmlFor="topic-custom-input" className="block text-[#bac2de] text-sm font-medium mb-1">
+														Or add a new topic:
 													</label>
-													<select
-														id="topic-select-dropdown"
-														className="w-full bg-[#1e1e2e] border border-[#45475a] rounded px-3 py-2 text-[#cdd6f4] text-sm focus:outline-none focus:ring-1 focus:ring-[#cba6f7] mb-2"
+													<input
+														id="topic-custom-input"
+														className="w-full bg-[#1e1e2e] border border-[#45475a] rounded px-3 py-2 text-[#cdd6f4] text-sm placeholder-[#6c7086] focus:outline-none focus:ring-1 focus:ring-[#cba6f7]"
+														placeholder="E.g., Quantum Physics"
 														value={tempTopicInput}
 														onChange={e => setTempTopicInput(e.target.value)}
+														onKeyDown={async (e) => {
+															if (e.key === 'Enter' && tempTopicInput.trim()) {
+																try {
+																	await addUserTopic(userId, tempTopicInput.trim());
+																	const updatedTopics = await getUserTopics(userId);
+																	setUserTopics(updatedTopics);
+																	setUserTopic(tempTopicInput.trim());
+																	setTopicsLoaded(true);
+																} catch (err) {
+																	alert("Failed to add topic");
+																}
+																setShowTopicDropdown(false);
+																e.currentTarget.blur();
+															}
+														}}
+													/>
+												</div>
+												<div className="space-y-2">
+													<Button
+														size="sm"
+														className="w-full bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] font-medium"
+														onClick={async () => {
+															if (tempTopicInput.trim()) {
+																try {
+																	await addUserTopic(userId, tempTopicInput.trim());
+																	const updatedTopics = await getUserTopics(userId);
+																	setUserTopics(updatedTopics);
+																	setUserTopic(tempTopicInput.trim());
+																	setTopicsLoaded(true);
+																} catch (err) {
+																	alert("Failed to add topic");
+																}
+															}
+															setShowTopicDropdown(false);
+														}}
 													>
-														<option value="">-- Select --</option>
-														{userTopics.map((topic) => (
-															<option key={topic} value={topic}>{topic}</option>
-														))}
-													</select>
-													<div className="text-center text-[#a6adc8] text-xs my-1">OR</div>
-												</>
-											)}
-											<label htmlFor="topic-custom-input" className="block text-[#bac2de] text-xs font-medium mb-1">
-												Enter custom topic:
-											</label>
-											<input
-												id="topic-custom-input"
-												className="w-full bg-[#1e1e2e] border border-[#45475a] rounded px-3 py-2 text-[#cdd6f4] text-sm placeholder-[#6c7086] focus:outline-none focus:ring-1 focus:ring-[#cba6f7]"
-												placeholder="E.g., Quantum Physics"
-												value={tempTopicInput}
-												onChange={e => setTempTopicInput(e.target.value)}
-												onKeyDown={async (e) => {
-													if (e.key === 'Enter' && tempTopicInput.trim()) {
-														try {
-															await addUserTopic(userId, tempTopicInput.trim());
-															const updatedTopics = await getUserTopics(userId);
-															setUserTopics(updatedTopics);
-															setUserTopic(tempTopicInput.trim());
-															setTopicsLoaded(true);
-														} catch (err) {
-															alert("Failed to add topic");
-														}
-														setShowTopicDropdown(false);
-														e.currentTarget.blur();
-													}
-												}}
-											/>
-											<Button
-												size="sm"
-												className="mt-3 w-full bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] font-medium"
-												disabled={uploading}
-												onClick={async () => {
-													if (tempTopicInput.trim()) {
-														try {
-															await addUserTopic(userId, tempTopicInput.trim());
-															const updatedTopics = await getUserTopics(userId);
-															setUserTopics(updatedTopics);
-															setUserTopic(tempTopicInput.trim());
-															setTopicsLoaded(true);
-														} catch (err) {
-															alert("Failed to add topic");
-														}
-													}
-													setShowTopicDropdown(false);
-												}}
-											>
-												<Upload className="w-4 h-4 mr-2" />
-												{uploading ? "Uploading..." : "Upload PDF Syllabus"}
-											</Button>
-											<Button size="sm" className="mt-3 w-full bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e]" onClick={async () => {
-												if (tempTopicInput.trim()) {
-													try {
-														await addUserTopic(userId, tempTopicInput.trim());
-														const updatedTopics = await getUserTopics(userId);
-														setUserTopics(updatedTopics);
-														setUserTopic(tempTopicInput.trim());
-														setTopicsLoaded(true);
-													} catch (err) {
-														alert("Failed to add topic");
-													}
-												}
-												setShowTopicDropdown(false);
-											}}>Done</Button>
+														Select Topic
+													</Button>
+													<label htmlFor="syllabus-upload" className="w-full block">
+														<Button
+															asChild
+															size="sm"
+															className="w-full bg-[#89b4fa] hover:bg-[#7aa2f7] text-[#1e1e2e] font-medium cursor-pointer"
+															disabled={uploading}
+														>
+															<div>
+																<Upload className="w-4 h-4 mr-2" />
+																{uploading ? "Uploading..." : "Upload PDF Syllabus"}
+																<input
+																	id="syllabus-upload"
+																	type="file"
+																	accept=".pdf"
+																	className="hidden"
+																	onChange={(e) => {
+																		const file = e.target.files?.[0];
+																		if (file) {
+																			handlePdfUpload(file);
+																		}
+																	}}
+																/>
+															</div>
+														</Button>
+													</label>
+													<Button
+														size="sm"
+														variant="outline"
+														className="w-full mt-2 text-[#f38ba8] border-[#f38ba8] hover:bg-[#f38ba8]/10"
+														onClick={() => setShowTopicDropdown(false)}
+													>
+														Cancel
+													</Button>
+												</div>
+											</div>
 										</div>
-									</div>
-								)}
-							</div>
-							<Button
-								variant="outline"
-								className="bg-[#313244] text-[#cdd6f4] border-[#45475a] hover:bg-[#383a59] px-4 py-2 text-sm"
-								onClick={handleGenerateQuiz}
-								disabled={isLoading}
-							>
-								📝 Take a Quiz
-							</Button>
-						</div>
-						{/* Textarea Input */}
-						<form onSubmit={handleSubmit} className="flex items-end space-x-4">
-							<div className="flex-1 relative">
-								<textarea
-									ref={inputRef}
-									value={input}
-									onChange={(e) => setInput(e.target.value)}
-									onKeyPress={handleKeyPress}
-									placeholder="Ask me anything about your studies..."
-									className="w-full bg-[#313244] border border-[#45475a] rounded-lg px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] resize-none focus:outline-none focus:ring-2 focus:ring-[#cba6f7] focus:border-transparent min-h-[50px] max-h-[120px] text-base pr-10"
-									rows={1}
-									disabled={isLoading}
-								/>
-								<div className="absolute bottom-2 right-2 text-xs text-[#6c7086]">
-									Press Enter to send, Shift+Enter for new line
+									)}
 								</div>
+								<Button
+									variant="outline"
+									className="bg-[#313244] text-[#cdd6f4] border-[#45475a] hover:bg-[#383a59] px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm"
+									onClick={handleGenerateQuiz}
+									disabled={isLoading}
+								>
+									<Lightbulb className="w-3 h-3 mr-1 sm:w-4 sm:h-4 sm:mr-2" /> Quiz
+								</Button>
 							</div>
-							<Button
-								type="submit"
-								disabled={!input.trim() || isLoading}
-								className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] px-6 py-3 h-[50px] flex-shrink-0"
-							>
-								{isLoading ? (
-									<div className="w-5 h-5 border-2 border-[#1e1e2e]/30 border-t-[#1e1e2e] rounded-full animate-spin" />
-								) : (
-									<Send className="w-5 h-5" />
-								)}
-							</Button>
-						</form>
+							{/* Textarea Input */}
+							<form onSubmit={handleSubmit} className="flex items-end space-x-2 sm:space-x-4">
+								<div className="flex-1 relative">
+									<textarea
+										ref={inputRef}
+										value={input}
+										onChange={(e) => setInput(e.target.value)}
+										onKeyPress={handleKeyPress}
+										placeholder="Ask me anything about your studies..."
+										className="w-full bg-[#313244] border border-[#45475a] rounded-2xl px-4 py-3 text-[#cdd6f4] placeholder-[#6c7086] resize-none focus:outline-none focus:ring-2 focus:ring-[#cba6f7] focus:border-transparent min-h-[40px] max-h-[100px] text-sm sm:text-base pr-8 sm:pr-10"
+										rows={1}
+										disabled={isLoading}
+									/>
+									<div className="absolute bottom-1 right-1 text-xs text-[#6c7086]">
+										Enter to send, Shift+Enter for new line
+									</div>
+								</div>
+								<Button
+									type="submit"
+									disabled={!input.trim() || isLoading}
+									className="bg-[#cba6f7] hover:bg-[#b4befe] text-[#1e1e2e] px-4 py-2 h-[40px] sm:px-6 sm:py-3 sm:h-[50px] flex-shrink-0"
+								>
+									{isLoading ? (
+										<div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-[#1e1e2e]/30 border-t-[#1e1e2e] rounded-full animate-spin" />
+									) : (
+										<Send className="w-4 h-4 sm:w-5 sm:h-5" />
+									)}
+								</Button>
+							</form>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			{/* Context Control Modal */}
-			{showContextModal && <ContextSettingsModal />}
-		</div>
+				{/* Context Control Modal */}
+				{showContextModal && <ContextSettingsModal />}
+			</div>
+		</>
 	)
 }
