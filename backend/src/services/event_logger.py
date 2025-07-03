@@ -5,9 +5,9 @@ from datetime import datetime
 EVENT_LOG_PATH = Path("data/user_events.jsonl")
 
 
-def log_user_event(user_id, event_type, topic=None, details=None):
+def log_user_event(username, event_type, topic=None, details=None):
     event = {
-        "user_id": user_id,
+        "username": username,
         "event_type": event_type,
         "topic": topic,
         "timestamp": datetime.utcnow().isoformat(),
