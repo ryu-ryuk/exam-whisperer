@@ -7,8 +7,8 @@ Create Date: 2025-07-03
 from alembic import op
 import sqlalchemy as sa
 
-revision = '20250703_add_llm_columns'
-down_revision = None
+revision = '20250703addllm'
+down_revision = '20250703createusers'
 branch_labels = None
 depends_on = None
 
