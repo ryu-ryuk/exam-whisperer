@@ -1,59 +1,40 @@
-# import os
-# import logging
-# import base64
-# from omnidimension import Client, APIError
+import os
+import base64
+import logging
+import requests
+from dotenv import load_dotenv
 
-# from .llm import explain_concept
+load_dotenv()
+logger = logging.getLogger(__name__)
 
-# # Initialize client
-# api_key = os.getenv("OMNIDIM_API_KEY")
-# client = Client(api_key) if api_key else None
+class VoiceProcessingError(Exception):
+    pass
 
-# def get_omnidim_voice_id():
-#     # You can make this dynamic or configurable
-#     return "hT1MsRBLaHSXGeWzW6xF"
-# async def text_to_speech(text: str, voice: str = None) -> str:
-#     if not client:
-#         logging.error("OmniDimension client not initialized")
-#         return None
-#     try:
-#         voice_id = voice or get_omnidim_voice_id()
-#         tts_response = client.agent.call_tts(
-#             agent_id=os.getenv("OMNIDIM_AGENT_ID"),
-#             text=text,
-#             voice_id=voice_id
-#         )
-#         return base64.b64encode(tts_response.audio).decode('utf-8')
-#     except APIError as e:
-#         logging.error(f"TTS error: {e.message}")
-#     except Exception as e:
-#         logging.exception("TTS conversion failed")
-#     return None
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+DEEPGRAM_MODEL = os.getenv("DEEPGRAM_MODEL", "aura-2-thalia-en")
 
-# async def process_voice_query(audio_data: bytes, user_id: str, topic: str) -> dict:
-#     if not client:
-#         logging.error("OmniDimension client not initialized")
-#         return {"error": "Voice service unavailable"}
-    
-#     try:
-#         # STT conversion
-#         stt_response = client.speech.to_text(audio=audio_data)
-#         question = stt_response.text.strip()
-#         logging.info(f"Transcribed: {question}")
-        
-#         # Get LLM explanation
-#         result = await explain_concept(question, user_id, topic)
-        
-#         # Prepare response WITHOUT generating TTS immediately
-#         return {
-#             "text_response": result["explanation"],
-#             "topic": result["topic"],
-#             "related_topics": result["related_topics"],
-#             # Audio will be generated on-demand via text_to_speech()
-#         }
-#     except APIError as e:
-#         logging.error(f"API error: {e.message}")
-#         return {"error": f"API Error ({e.status_code})"}
-#     except Exception as e:
-#         logging.exception("Processing failed")
-#         return {"error": f"Internal error: {str(e)}"}
+async def text_to_speech(text: str) -> str:
+    if not text:
+        raise VoiceProcessingError("Empty text input")
+
+    url = "https://api.deepgram.com/v1/speak"
+    headers = {
+        "Authorization": f"Token {DEEPGRAM_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    params = {"model": DEEPGRAM_MODEL}
+    payload = {"text": text}
+
+    try:
+        logger.info(f"Calling Deepgram TTS with model: {DEEPGRAM_MODEL}")
+        response = requests.post(url, headers=headers, json=payload, params=params, timeout=20)
+
+        if response.status_code != 200:
+            logger.error("Deepgram error: %s", response.text)
+            raise VoiceProcessingError(f"Deepgram error {response.status_code}: {response.text}")
+
+        return base64.b64encode(response.content).decode("utf-8")
+
+    except requests.RequestException as e:
+        logger.exception("Deepgram TTS request failed")
+        raise VoiceProcessingError(f"Deepgram request failed: {str(e)}")
