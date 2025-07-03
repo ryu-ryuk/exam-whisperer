@@ -82,10 +82,10 @@ function QuizMessageCard({ quiz, onAnswer, messageId, onNext }: QuizMessageCardP
 								>
 									<div className={`w-4 h-4 rounded-full border-2 
                                         ${selectedOption === option.id ?
-										(isSubmitted ?
-											(isCorrect ? 'bg-[#a6e3a1] border-[#a6e3a1]' : 'bg-[#f38ba8] border-[#f38ba8]')
-											: 'bg-[#cba6f7] border-[#cba6f7]')
-									: 'border-[#6c7086]'}`}></div>
+											(isSubmitted ?
+												(isCorrect ? 'bg-[#a6e3a1] border-[#a6e3a1]' : 'bg-[#f38ba8] border-[#f38ba8]')
+												: 'bg-[#cba6f7] border-[#cba6f7]')
+											: 'border-[#6c7086]'}`}></div>
 									<span className={isSubmitted && option.id === quiz.correctAnswerId ? 'text-[#a6e3a1]' : (isSubmitted && option.id === selectedOption ? 'text-[#f38ba8]' : 'text-[#a6adc8]')}>{option.text}</span>
 								</div>
 							))}
@@ -899,14 +899,17 @@ export default function ChatPage() {
 														remarkPlugins={[remarkGfm]} // Enable GitHub Flavored Markdown (tables, task lists, strikethrough)
 														components={{
 															// Custom rendering for code blocks to add proper styling
-															code({ node, inline, className, children, ...props }) {
+															code(props) {
+																const { className, children, node, ...rest } = props;
+																const isInline = node?.tagName !== 'code';
+
 																const match = /language-(\w+)/.exec(className || '');
-																return !inline ? (
+																return !isInline ? (
 																	<pre className="p-2 rounded-md bg-[#1e1e2e] overflow-x-auto text-[#cdd6f4] border border-[#45475a] my-2">
-																		<code className={className} {...props}>{children}</code>
+																		<code className={className} {...rest}>{children}</code>
 																	</pre>
 																) : (
-																	<code className="bg-[#45475a]/50 text-[#cba6f7] rounded px-1 py-0.5" {...props}>{children}</code>
+																	<code className="bg-[#45475a]/50 text-[#cba6f7] rounded px-1 py-0.5" {...rest}>{children}</code>
 																);
 															},
 														}}
