@@ -10,29 +10,29 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
-
+from db_models import User
 from db import SessionLocal
-from db_models import UserTopicActivity
+from db_models import UserTopicActivity, UserTopicNotes, UserQuizHistory
 from pathway_flow.stream import stream_topic_event
-from db_models import UserTopicActivity, UserTopicProgress
+from db_models import UserTopicActivity, UserTopicProgress, UserSyllabus
 
 LATEST_KB = Path("data/latest_content.jsonl")
 TOPIC_ATTEMPTS = Path("data/topic_attempts.jsonl")
 TOPIC_MASTERY = Path("data/user_topic_progress.jsonl")
 
 # --- update topic progress (postgres + pathway) ---
-async def update_topic_stats(user_id: str, topic: str, score: float, source: str = "quiz"):
+async def update_topic_stats(username: str, topic: str, score: float, source: str = "quiz"):
     """updates average score and mastery status, streams to pathway"""
     def db_op():
         db = SessionLocal()
-        entry = db.query(UserTopicActivity).filter_by(user_id=user_id, topic=topic).first()
+        entry = db.query(UserTopicActivity).filter_by(username=username, topic=topic).first()
         if entry:
             entry.average_score = (entry.average_score + score) / 2
             entry.last_attempt = datetime.utcnow()
             entry.mastery_status = _infer_mastery(entry.average_score)
         else:
             entry = UserTopicActivity(
-                user_id=user_id,
+                username=username,
                 topic=topic,
                 average_score=score,
                 last_attempt=datetime.utcnow(),
@@ -43,36 +43,36 @@ async def update_topic_stats(user_id: str, topic: str, score: float, source: str
         db.close()
 
     await asyncio.to_thread(db_op)
-    await asyncio.to_thread(stream_topic_event, user_id, topic, score)
+    await asyncio.to_thread(stream_topic_event, username, topic, score)
 
 # --- shortcut to log quiz/ask interaction ---
-async def log_topic_attempt(user_id: str, topic: str, score: float = 0.3, source: str = "ask"):
+async def log_topic_attempt(username: str, topic: str, score: float = 0.3, source: str = "ask"):
     """defaults to low score (0.3) for /ask explanations"""
-    await update_topic_stats(user_id, topic, score=score, source=source)
+    await update_topic_stats(username, topic, score=score, source=source)
 
 # --- return full user progress (postgres) ---
-def get_user_progress(user_id: str):
+def get_user_progress(username: str):
     db = SessionLocal()
-    entries = db.query(UserTopicActivity).filter_by(user_id=user_id).all()
+    entries = db.query(UserTopicActivity).filter_by(username=username).all()
     db.close()
 
     return {
-        "user_id": user_id,
+        "username": username,
         "stats": [
             {
                 "topic": e.topic,
                 "last_attempt": e.last_attempt,
                 "average_score": e.average_score,
-                "mastery_status": e.mastery_status
+                "mastery_status": e.mastery_status,
             }
             for e in entries
-        ]
+        ],
     }
 
 # --- suggest revision reminders ---
-async def get_due_reminders(user_id: str):
+async def get_due_reminders(username: str):
     db = SessionLocal()
-    entries = db.query(UserTopicActivity).filter_by(user_id=user_id).all()
+    entries = db.query(UserTopicActivity).filter_by(username=username).all()
     db.close()
     now = datetime.utcnow()
     reminders = []
@@ -117,97 +117,63 @@ def _infer_mastery(score: float) -> str:
 #     }
 
 # --- build full LLM context: notes + history + preferences ---
-# def get_user_context(user_id: str, topic: str) -> dict:
-#     """builds user context for LLM: notes, past performance, preferences"""
-#     context = {"notes": "", "quiz_history": [], "preferences": {}}
-#
-#     # from LATEST_KB
-#     if LATEST_KB.exists():
-#         with LATEST_KB.open(encoding="utf-8") as f:
-#             for line in f:
-#                 rec = json.loads(line)
-#                 if rec["user_id"] == user_id:
-#                     if rec.get("type") == "notes" and rec.get("topic") == topic:
-#                         context["notes"] = rec.get("content", "")
-#                     elif rec.get("type") == "quiz_history" and rec.get("topic") == topic:
-#                         context["quiz_history"].append(rec.get("performance", {}))
-#                     elif rec.get("type") == "preferences":
-#                         context["preferences"] = rec.get("preferences", {})
-#
-#     # from topic_attempts
-#     if TOPIC_ATTEMPTS.exists():
-#         with TOPIC_ATTEMPTS.open(encoding="utf-8") as f:
-#             for line in f:
-#                 rec = json.loads(line)
-#                 if rec["user_id"] == user_id and rec.get("topic") == topic:
-#                     context["quiz_history"].append(rec.get("performance", {}))
-#
-#     # from topic_mastery (stream output)
-#     if TOPIC_MASTERY.exists():
-#         with TOPIC_MASTERY.open(encoding="utf-8") as f:
-#             for line in f:
-#                 rec = json.loads(line)
-#                 if rec["user_id"] == user_id and rec.get("topic") == topic:
-#                     context["preferences"]["mastery_level"] = rec.get("mastery", "beginner")
-#
-#     return context
-#
-def get_user_context(user_id: str, topic: str) -> dict:
+def get_user_context(username: str, topic: str) -> dict:
+    """
+    Builds user context for LLM: notes, quiz history, preferences/progress, and syllabus topics.
+    Fetches all from the database using username and topic.
+    """
+    db = SessionLocal()
     context = {
         "notes": "",
         "quiz_history": [],
-        "preferences": {}
+        "preferences": {},
+        "syllabus_topics": []
     }
-
-    # read notes from latest_content
-    if LATEST_KB.exists():
-        with LATEST_KB.open(encoding="utf-8") as f:
-            for line in f:
-                rec = json.loads(line)
-                if rec["user_id"] == user_id and rec.get("topic") == topic:
-                    if "content" in rec:
-                        context["notes"] = rec["content"]
-                        break
-
-    # read quiz history from topic_attempts
-    if TOPIC_ATTEMPTS.exists():
-        with TOPIC_ATTEMPTS.open(encoding="utf-8") as f:
-            for line in f:
-                rec = json.loads(line)
-                if rec["user_id"] == user_id and rec.get("topic") == topic:
-                    if "performance" in rec:
-                        context["quiz_history"].append(rec["performance"])
-                    elif "score" in rec:
-                        context["quiz_history"].append({
-                            "score": rec["score"],
-                            "timestamp": rec.get("timestamp", "")
-                        })
-
-    # read preferences from topic_mastery
-    if TOPIC_MASTERY.exists():
-        with TOPIC_MASTERY.open(encoding="utf-8") as f:
-            for line in f:
-                rec = json.loads(line)
-                if rec["user_id"] == user_id and rec.get("topic") == topic:
-                    mastery = rec.get("mastery", "beginner")
-                    context["preferences"]["mastery_level"] = mastery
-
-                    # related topic suggestions
-                    if mastery == "weak":
-                        context["preferences"]["related_topics"] = rec.get("related_topics", [])
-                    break
-
-
+    try:
+        # Notes
+        note = db.query(UserTopicNotes).filter_by(username=username, topic=topic).order_by(UserTopicNotes.updated_at.desc()).first()
+        if note:
+            context["notes"] = note.notes or ""
+        # Quiz history (most recent 10)
+        quiz_rows = db.query(UserQuizHistory).filter_by(username=username, topic=topic).order_by(UserQuizHistory.timestamp.desc()).limit(10).all()
+        for q in quiz_rows:
+            context["quiz_history"].append({
+                "question": q.question,
+                "answer": q.answer,
+                "correct": q.correct,
+                "score": q.score,
+                "timestamp": q.timestamp.isoformat() if q.timestamp else None
+            })
+        # Preferences/progress
+        activity = db.query(UserTopicActivity).filter_by(username=username, topic=topic).first()
+        if activity:
+            context["preferences"]["mastery_level"] = activity.mastery_status
+            context["preferences"]["average_score"] = activity.average_score
+            context["preferences"]["last_attempt"] = activity.last_attempt.isoformat() if activity.last_attempt else None
+        progress = db.query(UserTopicProgress).filter_by(username=username, topic=topic).first()
+        if progress:
+            context["preferences"]["latest_score"] = progress.latest_score
+            context["preferences"]["trend"] = progress.trend
+            context["preferences"]["status"] = progress.status
+        # Syllabus topics
+        syllabus = db.query(UserSyllabus).filter_by(username=username).first()
+        if syllabus and syllabus.topics_text:
+            try:
+                context["syllabus_topics"] = json.loads(syllabus.topics_text)
+            except Exception:
+                context["syllabus_topics"] = []
+    finally:
+        db.close()
     return context
 
 
-def get_user_progress_from_pathway(user_id: str):
+def get_user_progress_from_pathway(username: str):
     stats = []
     try:
         with open("data/topic_mastery.jsonl") as f:
             for line in f:
                 row = json.loads(line)
-                if row["user_id"] == user_id:
+                if row["username"] == username:
                     stats.append({
                         "topic": row["topic"],
                         "last_attempt": row["last_attempt"],
@@ -217,33 +183,33 @@ def get_user_progress_from_pathway(user_id: str):
     except FileNotFoundError:
         pass
     return {
-        "user_id": user_id,
+        "username": username,
         "stats": stats
     }
-
-def get_user_progress_from_db(user_id: str) -> Dict[str, Any]:
+def get_user_progress_from_db(username: str) -> Dict[str, Any]:
     session = SessionLocal()
     try:
-        # 1) Fetch all progress rows for this user
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            return {"error": "user not found"}
+
         rows = (
             session.query(UserTopicProgress)
-                   .filter(UserTopicProgress.user_id == user_id)
-                   .all()
+                .filter(UserTopicProgress.username == username)
+                .all()
         )
 
-        # 2) Transform into dicts
         topics: List[Dict[str, Any]] = []
         for row in rows:
             topics.append({
                 "topic":         row.topic,
                 "latest_score":  row.latest_score,
                 "average_score": row.average_score,
-                "last_attempt":  row.last_attempt,   # Pydantic will handle ISO formatting
+                "last_attempt":  row.last_attempt,
                 "trend":         row.trend,
                 "status":        row.status,
             })
 
-        # 3) Compute summary
         total = len(topics)
         mastered = sum(1 for t in topics if t["status"] == "mastered")
         improving = sum(1 for t in topics if t["trend"] == "improving")
@@ -257,9 +223,9 @@ def get_user_progress_from_db(user_id: str) -> Dict[str, Any]:
             "needs_attention": needs_attention,
             "average_score": average_score,
         }
-
+        
         return {
-            "user_id": user_id,
+            "username": username,
             "summary": summary,
             "topics":  topics
         }
