@@ -25,11 +25,12 @@ class AskRequest(BaseModel):
     temperature: float
     max_tokens: int
     llm_config: BackendLLMConfig
-# Frontend expects 'content' for chat responses, align backend model
+    
+
+# unused 
 class AskResponse(BaseModel):
-    content: str # Changed from 'explanation' to 'content' for frontend consistency
+    content: str 
     topic: str
-    # Add other fields if explain_concept returns them, e.g., related_topics, confidence
 
 # ---------- /quiz ----------
 
@@ -37,19 +38,19 @@ class QuizQuestion(BaseModel):
     question: str
     options: List[Dict[str, str]] # List of dictionaries like {"id": "A", "text": "Option A"}
     correctAnswerId: str # e.g., "A", "B"
-    feedback: str        # Explanation for the correct answer
+    feedback: str 
 
 # Model for generating a new quiz question (single question, LLM-driven)
 class QuizCreateRequest(BaseModel):
     topic: str
     difficulty: Optional[str] = "medium"
     num_questions: Optional[int] = 1 # Default to 1 question for chat integration
-    username: str # Renamed from user_id
-    llm_config: BackendLLMConfig # This is essential for LLM-driven generation
+    username: str
+    llm_config: BackendLLMConfig 
 # Model for evaluating a quiz answer
 
 class QuizEvaluateRequest(BaseModel):
-    username: str # Renamed from user_id
+    username: str 
     topic: str
     question_index: int # Index of the question within the quiz context
     user_answer: str    # The ID of the option selected by the user (e.g., 'A', 'B')
