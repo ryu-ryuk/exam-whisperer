@@ -17,7 +17,6 @@ async def create_quiz_question(request_data: QuizCreateRequest):
     try:
         topic_for_llm = request_data.topic if request_data.topic is not None else ""
         
-        # Add explicit check for llm_config being a Pydantic object
         if not isinstance(request_data.llm_config, BackendLLMConfig):
             logging.error(f"Invalid llm_config received: {request_data.llm_config}")
             raise HTTPException(status_code=400, detail="Invalid LLM configuration format.")
@@ -61,7 +60,7 @@ async def evaluate_answer(request_data: QuizEvaluateRequest):
             question=request_data.question,
             num_questions=request_data.num_questions,
             difficulty=request_data.difficulty,
-            llm_config=request_data.llm_config # Pass llm_config to evaluation
+            llm_config=request_data.llm_config
         )
     except Exception as e:
         logging.exception(f"Error evaluating quiz answer: {e}")
