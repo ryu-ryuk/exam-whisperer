@@ -25,22 +25,20 @@ def signin_with_google(payload: GoogleAuthRequest):
             audience=os.environ.get("GOOGLE_CLIENT_ID")  # This must match exactly
         )
         email = id_info.get("email")
-
-        
-        stmt = select(User).where(User.email==email)
+        google_name = id_info.get("name")
+        # Use the part before @ as username, fallback to Google name or email
+        username = email.split("@")[0] if email else (google_name or "googleuser")
+        stmt = select(User).where(User.username==username)
         session = SessionLocal()
         user = session.execute(stmt).scalar_one_or_none()
-        if not user: 
-            user = User(email=email)
+        if not user:
+            user = User(username=username, email=email)
             session.add(user)
             session.commit()
             session.refresh(user)
-
         user_id = user.id
         token = create_access_token({"id":user_id})
-        return { "token" : token }
-
-
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid Google token")
+        return {"access_token": token, "token_type": "bearer", "username": user.username, "email": user.email}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Google OAuth failed: {e}")
 
