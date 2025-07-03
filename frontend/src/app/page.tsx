@@ -8,6 +8,7 @@ import { useEffect, useState, useRef } from "react" // Import useRef
 
 export default function LandingPage() {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const [showDemoModal, setShowDemoModal] = useState(false); // Add demo modal state
 	const mainContainerRef = useRef<HTMLDivElement>(null); // Ref for the main scroll container
 
 	useEffect(() => {
@@ -121,7 +122,11 @@ export default function LandingPage() {
 									<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
 								</Button>
 							</a>
-							<Button variant="outline" className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#45475a]/80 px-8 py-3 text-lg hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/20 transition-all duration-300 hover:-rotate-1 w-full sm:w-auto">
+							<Button
+								variant="outline"
+								className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#45475a]/80 px-8 py-3 text-lg hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/20 transition-all duration-300 hover:-rotate-1 w-full sm:w-auto"
+								onClick={() => setShowDemoModal(true)}
+							>
 								Watch Demo
 							</Button>
 						</div>
@@ -139,6 +144,30 @@ export default function LandingPage() {
 					</div>
 				</div>
 			</section>
+
+			{/* Demo Modal */}
+			{showDemoModal && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e1e2e]/80 backdrop-blur-sm">
+					<div className="bg-[#313244] border border-[#45475a] rounded-2xl shadow-2xl max-w-lg w-full p-8 relative animate-fade-in">
+						<button
+							className="absolute top-4 right-4 text-[#cdd6f4] hover:text-[#f38ba8] text-2xl"
+							onClick={() => setShowDemoModal(false)}
+							aria-label="Close demo preview"
+						>
+							<X className="h-6 w-6" />
+						</button>
+						<h2 className="text-2xl font-bold mb-4 text-[#cdd6f4]">Watch Demo</h2>
+						<div className="aspect-video rounded-lg overflow-hidden mb-4 bg-black flex items-center justify-center">
+							{/* Replace with your actual demo video or embed */}
+							<video controls className="w-full h-full">
+								<source src="/demo.mp4" type="video/mp4" />
+								Your browser does not support the video tag.
+							</video>
+						</div>
+						<p className="text-[#a6adc8] text-center">See how Whisper helps you study smarter, not harder.</p>
+					</div>
+				</div>
+			)}
 
 			{/* Ask Anything Section */}
 			<section id="ask-anything" className="min-h-[100dvh] flex flex-col snap-start snap-always bg-[#181825]">
@@ -168,7 +197,7 @@ export default function LandingPage() {
 									</div>
 									<div className="flex items-center space-x-3">
 										<CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
-										<span className="text-[#a6adc8]">Student-level explanations, tailored to you 😉</span>
+										<span className="text-[#a6adc8]">Student-level explanations, tailored to you ;) </span>
 									</div>
 								</div>
 							</div>
