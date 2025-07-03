@@ -10,13 +10,20 @@ from google import oauth2
 load_dotenv()
 
 from fastapi import FastAPI
-from routes import ask, oauth, quiz, progress, reminders, syllabus, upload, topics
+from routes import ask, oauth, quiz, progress, reminders, syllabus, upload, topics, voices, user
 import threading
 from src.services.jsonl_uploader import run_uploader
 import os 
 app = FastAPI()
 from db import Base, engine
 from db_models import UserSyllabus, UserTopicActivity
+from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 
 Base.metadata.create_all(bind=engine)
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "*")
@@ -31,11 +38,11 @@ app.include_router(reminders.router)
 app.include_router(syllabus.router)  # opt for now 
 app.include_router(upload.router)  
 app.include_router(topics.router)
-# app.include_router(voices.router)
+app.include_router(voices.router)
 app.include_router(oauth.router)
+app.include_router(user.router)
 
 
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,7 +52,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/health")
 def root():
     return {"msg": "exam whisperer backend running"}
 # 
