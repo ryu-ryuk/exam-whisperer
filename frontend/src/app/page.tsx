@@ -10,7 +10,6 @@ export default function LandingPage() {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const mainContainerRef = useRef<HTMLDivElement>(null); // Ref for the main scroll container
 
-	// Effect to dynamically set the height of the main container for consistent snapping
 	useEffect(() => {
 		const setDynamicHeight = () => {
 			if (mainContainerRef.current) {
@@ -37,12 +36,13 @@ export default function LandingPage() {
 	}, []);
 
 	return (
-		// Apply the ref to the main scroll container. Height is set by JS.
-		// Remove h-screen-dynamic from here.
-		<div ref={mainContainerRef} className="overflow-y-scroll bg-[#1e1e2e] text-[#cdd6f4] scroll-smooth snap-y snap-mandatory">
+		<div
+			ref={mainContainerRef}
+			className="overflow-y-scroll overflow-x-hidden bg-[#1e1e2e] text-[#cdd6f4] scroll-smooth snap-y snap-mandatory min-h-screen"
+		>
 			{/* Navigation */}
 			<nav className="sticky top-0 w-full z-50 bg-[#1e1e2e]/80 backdrop-blur-sm border-b border-[#313244]">
-				<div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-4 flex justify-between items-center">
 					{/* Logo and Product Name - now clickable to scroll to top */}
 					<a href="#" className="flex items-center space-x-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
 						<div className="w-8 h-8 bg-[#cba6f7] rounded-lg flex items-center justify-center">
@@ -96,35 +96,32 @@ export default function LandingPage() {
 			</nav>
 
 			{/* Hero Section */}
-			{/* Added flex-col to section, and a flex-grow for content wrapper */}
-			<section className="h-screen-dynamic flex flex-col snap-start snap-always">
-				{/* Content wrapper with auto-scrolling if it overflows */}
-				<div className="flex-grow overflow-y-auto pt-48 pb-64 px-6 sm:px-4 md:px-6 lg:px-8 flex items-center justify-center">
-					<div className="max-w-7xl mx-auto text-center space-y-8 relative z-10">
+			<section className="min-h-[100dvh] flex flex-col snap-start snap-always bg-[#1e1e2e]">
+				<div className="flex-grow flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pt-32 pb-24">
+					<div className="max-w-3xl w-full mx-auto text-center space-y-8 relative z-10">
 						<div className="inline-flex items-center space-x-2 bg-[#313244] px-4 py-2 rounded-full hover:bg-[#313244]/80 hover:scale-105 transition-all duration-300 group cursor-pointer">
 							<Sparkles className="h-4 w-4 text-[#cba6f7] group-hover:animate-spin group-hover:text-[#b4befe] transition-all duration-300" />
 							<span className="text-sm text-[#a6adc8] group-hover:text-[#cdd6f4] transition-colors duration-300">AI-powered studying</span>
 						</div>
 
-						<h1 className="text-5xl md:text-7xl font-bold text-[#cdd6f4] leading-tight group">
+						<h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-[#cdd6f4] leading-tight group">
 							<span className="inline-block hover:scale-105 hover:text-[#f9e2af] transition-all duration-300 cursor-default">Study smarter with</span>
 							<br />
 							<span className="text-[#cba6f7] inline-block hover:scale-110 hover:text-[#b4befe] transition-all duration-500 cursor-default hover:drop-shadow-lg">Whisper</span>
 						</h1>
 
-						<p className="text-xl text-[#a6adc8] max-w-2xl mx-auto leading-relaxed hover:text-[#cdd6f4] transition-colors duration-300 cursor-default">
-							Your intelligent study companion that adapts to your learning style.
-							Ask questions, practice with quizzes, and track your progress effortlessly.
+						<p className="text-lg sm:text-xl text-[#a6adc8] max-w-2xl mx-auto leading-relaxed hover:text-[#cdd6f4] transition-colors duration-300 cursor-default">
+							Your intelligent study companion that adapts to your learning style. Ask questions, practice with quizzes, and track your progress effortlessly.
 						</p>
 
-						<div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+						<div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
 							<a href="/chat" className="group w-full sm:w-auto">
 								<Button className="bg-[#cba6f7] text-[#1e1e2e] hover:bg-[#b4befe] px-8 py-3 text-lg font-medium hover:scale-110 hover:shadow-2xl hover:shadow-[#cba6f7]/30 transition-all duration-300 group-hover:rotate-1 w-full">
 									Try Now
 									<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 group-hover:scale-110 transition-all duration-300" />
 								</Button>
 							</a>
-							<Button variant="outline" className="bg-blue-300 border-[#45475a] text-[#1e1e2e] hover:bg-[#979be5] px-8 py-3 text-lg hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/20 transition-all duration-300 hover:-rotate-1 w-full sm:w-auto">
+							<Button variant="outline" className="bg-[#313244] border-[#45475a] text-[#cdd6f4] hover:bg-[#45475a]/80 px-8 py-3 text-lg hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/20 transition-all duration-300 hover:-rotate-1 w-full sm:w-auto">
 								Watch Demo
 							</Button>
 						</div>
@@ -144,22 +141,21 @@ export default function LandingPage() {
 			</section>
 
 			{/* Ask Anything Section */}
-			<section id="ask-anything" className="h-screen-dynamic flex flex-col snap-start snap-always bg-[#181825]">
-				<div className="flex-grow overflow-y-auto pt-48 pb-64 px-6 sm:px-4 md:px-6 lg:px-8 flex items-center justify-center">
-					<div className="container mx-auto">
+			<section id="ask-anything" className="min-h-[100dvh] flex flex-col snap-start snap-always bg-[#181825]">
+				<div className="flex-grow flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 pt-24 pb-24">
+					<div className="container mx-auto max-w-5xl">
 						<div className="grid lg:grid-cols-2 gap-12 items-center">
 							<div>
 								<Badge className="mb-4 bg-[#89b4fa]/20 text-[#89b4fa] border-[#89b4fa]/30">
 									<MessageCircle className="w-4 h-4 mr-2" />
 									Ask Anything
 								</Badge>
-								<h2 className="text-4xl md:text-5xl font-bold text-[#cdd6f4] mb-6">
+								<h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#cdd6f4] mb-6">
 									Get Clear Explanations
 									<span className="text-[#89b4fa]"> Instantly</span>
 								</h2>
-								<p className="text-xl text-[#a6adc8] mb-8">
-									Confused about a concept? Just ask! Whisper breaks down complex topics into clean, concise explanations
-									tailored to your learning level.
+								<p className="text-lg sm:text-xl text-[#a6adc8] mb-8">
+									Confused about a concept? Just ask! Whisper breaks down complex topics into clean, concise explanations tailored to your learning level.
 								</p>
 								<div className="space-y-4">
 									<div className="flex items-center space-x-3">
@@ -172,11 +168,11 @@ export default function LandingPage() {
 									</div>
 									<div className="flex items-center space-x-3">
 										<CheckCircle className="h-6 w-6 text-[#a6e3a1]" />
-										<span className="text-[#a6adc8]">Student-level explanations, tailored to you ;) </span>
+										<span className="text-[#a6adc8]">Student-level explanations, tailored to you 😉</span>
 									</div>
 								</div>
 							</div>
-							<Card className="bg-[#313244]/50 border-[#45475a] backdrop-blur-sm hover:bg-[#313244]/70 hover:border-[#89b4fa]/30 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/10 group">
+							<Card className="bg-[#313244]/70 border-[#45475a] backdrop-blur-sm hover:bg-[#313244]/80 hover:border-[#89b4fa]/30 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#89b4fa]/10 group">
 								<CardHeader>
 									<CardTitle className="text-[#cdd6f4] flex items-center group-hover:text-[#89b4fa] transition-colors duration-300">
 										<MessageCircle className="mr-2 h-5 w-5 text-[#89b4fa] group-hover:scale-110 transition-transform duration-300" />
@@ -187,14 +183,12 @@ export default function LandingPage() {
 									<div className="space-y-4">
 										<div className="bg-[#45475a]/50 p-4 rounded-lg group-hover:bg-[#45475a]/70 transition-colors duration-300">
 											<p className="text-[#a6adc8] text-sm">You asked:</p>
-											<p className="text-[#cdd6f4]">&quot;Explain photosynthesis in simple terms&quot;</p>
+											<p className="text-[#cdd6f4]">"Explain photosynthesis in simple terms"</p>
 										</div>
 										<div className="bg-[#89b4fa]/20 p-4 rounded-lg border border-[#89b4fa]/30 group-hover:bg-[#89b4fa]/30 group-hover:border-[#89b4fa]/50 transition-all duration-300">
 											<p className="text-[#a6adc8] text-sm mb-2">Whisper Response:</p>
 											<p className="text-[#cdd6f4]">
-												Photosynthesis is like cooking for plants! They use sunlight as energy, water from their roots,
-												and carbon dioxide from the air to make their own food (glucose). As a bonus, they release oxygen
-												that we breathe!
+												Photosynthesis is like cooking for plants! They use sunlight as energy, water from their roots, and carbon dioxide from the air to make their own food (glucose). As a bonus, they release oxygen that we breathe!
 											</p>
 										</div>
 									</div>
