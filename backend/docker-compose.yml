@@ -15,10 +15,8 @@ services:
           target: app/src/
         - path: pyproject.toml
           action: rebuild
-          
-    command: "fastapi dev --host 0.0.0.0 main.py"
-
-
+    command: >
+      sh -c "alembic upgrade head && fastapi dev --host 0.0.0.0 main.py"
     networks:
       - ew-net
     env_file:
