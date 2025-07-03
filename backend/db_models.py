@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, Sequence, String, Float, DateTime, Text
+from sqlalchemy import Column, Integer, Sequence, String, Float, ForeignKey, DateTime, Text
 from datetime import datetime, timezone
 from db import Base
+
+class Topic(Base):
+    __tablename__ = "topics"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    topic_name = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 class User(Base):
     __tablename__ = "users"
@@ -10,6 +18,9 @@ class User(Base):
     email = Column(String, unique=True, nullable=True)
     password_hash = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    llm_provider = Column(String, nullable=True)
+    llm_api_key = Column(String, nullable=True)
+    llm_model = Column(String, nullable=True)
 
 class UserTopicActivity(Base):
     __tablename__ = "user_topic_activity"
