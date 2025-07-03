@@ -1,10 +1,14 @@
 import fitz  # pymupdf
-import re
 import json
 from services.llm import _call_llm
+from models import BackendLLMConfig
 
-async def parse_pdf_topics(file_path: str) -> list[str]:
+async def parse_pdf_topics(file_path: str, llm_config: dict) -> list[str]:
     """extract topics from a syllabus or textbook PDF using LLM"""
+    # Convert dict to BackendLLMConfig if needed
+    if isinstance(llm_config, dict):
+        llm_config = BackendLLMConfig(**llm_config)
+
     doc = fitz.open(file_path)
     text_chunks = []
     import re
@@ -42,7 +46,7 @@ async def parse_pdf_topics(file_path: str) -> list[str]:
 
 
     try:
-        raw = clean_llm_json(await _call_llm(prompt))
+        raw = clean_llm_json(await _call_llm(prompt, llm_config))
         if raw.startswith("```"):
             import re
             raw = re.sub(r"^```[a-zA-Z]*\n?", "", raw).strip()
