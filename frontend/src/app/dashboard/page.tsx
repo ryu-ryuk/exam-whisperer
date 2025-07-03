@@ -13,7 +13,7 @@ export default function DashboardPage() {
     const [password, setPassword] = useState("");
     const [editing, setEditing] = useState(false);
     const [savedName, setSavedName] = useState<string | null>(null);
-    const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+    const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
     const [canEnter, setCanEnter] = useState(false);
 
     useEffect(() => {
