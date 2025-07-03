@@ -18,7 +18,7 @@ class BackendLLMConfig(BaseModel):
 # ---------- /ask ----------
 
 class AskRequest(BaseModel):
-    user_id: str
+    username: str
     question: str
     topic: Optional[str] = None # if None, topic is inferred from question
     system_prompt: str
@@ -44,12 +44,12 @@ class QuizCreateRequest(BaseModel):
     topic: str
     difficulty: Optional[str] = "medium"
     num_questions: Optional[int] = 1 # Default to 1 question for chat integration
-    user_id: str # Added user_id for logging/personalization
+    username: str # Renamed from user_id
     llm_config: BackendLLMConfig # This is essential for LLM-driven generation
 # Model for evaluating a quiz answer
 
 class QuizEvaluateRequest(BaseModel):
-    user_id: str
+    username: str # Renamed from user_id
     topic: str
     question_index: int # Index of the question within the quiz context
     user_answer: str    # The ID of the option selected by the user (e.g., 'A', 'B')
@@ -68,7 +68,7 @@ class TopicStat(BaseModel):
     mastery_status: str  # "weak", "improving", "mastered"
 
 class ProgressResponse(BaseModel):
-    user_id: str
+    username: str
     stats: List[TopicStat]
 
 class TopicProgress(BaseModel):
@@ -80,7 +80,7 @@ class TopicProgress(BaseModel):
     last_attempt: datetime
 
 class OverallProgress(BaseModel):
-    user_id: str
+    username: str
     overall_score: float
     topics: List[TopicProgress]
 
