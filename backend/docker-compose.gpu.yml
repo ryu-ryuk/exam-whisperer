@@ -1,0 +1,62 @@
+services:
+  backend:
+    container_name: exam-whisperer
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - ollama
+    develop:
+      watch:
+        - path: ./src/
+          action: sync
+          target: app/src/
+        - path: pyproject.toml
+          action: rebuild
+    command: >
+      sh -c "alembic upgrade head && fastapi dev --host 0.0.0.0 main.py"
+    networks:
+      - ew-net
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    container_name: ew-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ew-net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ew-net
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  ollama_data:
+
+networks:
+  ew-net:
+    driver: bridge
