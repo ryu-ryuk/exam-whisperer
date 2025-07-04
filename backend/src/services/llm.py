@@ -258,3 +258,53 @@ def get_user_topic_bucket(user_id: str, topic: str) -> str:
             if rec["user_id"] == user_id and rec["topic"] == topic:
                 return rec.get("content", "")
     return ""
+
+
+async def get_summary(topic: str, context: dict) -> str:
+    """
+    Produce a concise, student‑friendly summary of `topic`,
+    grounded in the user's own notes and quiz history from `context`.
+    """
+    #Inject user notes and history
+    notes = context.get("notes", "")
+    history = context.get("quiz_history", [])
+    mastery = context.get("preferences", {}).get("mastery_level", "unknown")
+
+    # Build the prompt
+    prompt = f"""
+    You are an educational assistant creating a study summary.
+
+    Topic: {topic}
+    User mastery level: {mastery}
+    User notes:
+    \"\"\"{notes}\"\"\"
+
+    Quiz history (last 3 attempts):
+    This user has attempted quizzes on this topic multiple times. Here are their last 3 scores:
+    """
+    # include up to last 3 scores
+    for entry in history[-3:]:
+        score = entry.get("score", "N/A")
+        ts = entry.get("timestamp", "")
+        prompt += f"- {score} on {ts}\n"
+
+    prompt += """
+
+    Based on the above, write a clear and concise 5-bullet-point summary of the topic to help the student review the key concepts.
+    Focus on the most important aspects, avoiding unnecessary details."""
+
+    try:
+
+        # Call the LLM
+        if PROVIDER == "openai":
+            return (await _openai_chat(prompt)).strip()
+        elif PROVIDER == "gemini":
+            return (await _gemini_chat(prompt)).strip()
+        elif PROVIDER == "ollama":
+            return (await _ollama_chat(prompt)).strip()
+        else:
+            raise ValueError("Unsupported LLM provider")
+    except Exception as e:
+        logging.error(f"Error generating summary: {e}")
+        raise LLMProviderError("Failed to generate summary") from e
+
