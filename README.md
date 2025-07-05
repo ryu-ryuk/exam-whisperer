@@ -7,6 +7,7 @@
 <h6 align="center" style="color:#5c5f77; margin-top: -12px;">
   a real-time, ai-powered exam revision assistant.
 </h6>
+
 <p align="center">
   <a href="https://github.com/ryu-ryuk/exam-whisperer/stargazers">
     <img src="https://img.shields.io/github/stars/ryu-ryuk/exam-whisperer?colorA=1e1e2e&colorB=cba6f7&style=for-the-badge&logo=github&logoColor=cdd6f4">
@@ -24,107 +25,62 @@
   <img src="https://img.shields.io/badge/PostgreSQL-DB-b4befe?style=for-the-badge&logo=postgresql&logoColor=white&colorA=1e1e2e" />
   <img src="https://img.shields.io/badge/Pathway-Real_Time-cba6f7?style=for-the-badge&logo=databricks&logoColor=white&colorA=1e1e2e" />
   <img src="https://img.shields.io/badge/LLM-OpenAI/Ollama/Gemini-74c7ec?style=for-the-badge&logo=openai&logoColor=white&colorA=1e1e2e" />
-<!--   <img src="https://img.shields.io/badge/Speech-Whisper+TTS-f38ba8?style=for-the-badge&logo=voicemod&logoColor=white&colorA=1e1e2e" /> -->
 </p>
 
 <p align="center" style="color:#bac2de; font-size: 14.5px; line-height: 1.6; max-width: 700px; margin: auto;">
   <strong style="color:#cdd6f4;">Whisper</strong> is a real-time exam revision agent that helps you <em>learn</em>, not just get answers.<br/>
   it explains concepts, quizzes you, and tracks topic mastery using <span style="color:#89b4fa;">LLMs</span> and <span style="color:#cba6f7;">Pathway</span> in a continuous feedback loop.<br/><br/>
-  <em style="color:#f38ba8;">built during Code Cubicle 4.0 — not another chatbot, but a real-time learning agent.</em>
+  <em style="color:#f38ba8;">built during Code Cubicle 4.0 — not a chatbot, but a learning engine.</em>
 </p>
-
-
-
-## why whisper?
-
-llm tools answer questions, but they don't **help you learn**.  
-whisper does.
-
-- explains doubts clearly  
-- quizzes meaningfully by topic  
-- tracks learning progress  
-- suggests what to revise next  
 
 ---
 
 ## features
 
-| endpoint | purpose |
-|----------|---------|
-| `POST /ask`      | clean explanation of any concept |
-| `POST /quiz`     | generates mcqs or short-answer sets |
-| `POST /answer`   | logs attempts and scores |
-| `GET /progress`  | real-time topic mastery tracking |
-| `voice support`  | speak your doubts, hear answers (via whisper + tts) |
+- explain any concept in simple language  
+- generate topic-specific quizzes (MCQ, short answers)  
+- track your scores and mastery per topic  
+- real-time adaptive learning using Pathway  
+- switchable model support: OpenAI, Gemini, Ollama, local models  
+- beautiful and responsive UI (Next.js + Tailwind)  
+- user auth with email/password or OAuth login  
+- fully documented API in [`docs/api.md`](docs/api.md)
 
 ---
 
-## tech stack
+## how it helps you learn
+
+traditional llm tools give you answers.  
+whisper helps you build understanding.
+
+- monitors your progress by topic  
+- adapts questions based on performance  
+- suggests revisions when needed  
+- real-time feedback loop (no cron jobs or polling)
+
+---
+
+## architecture
 
 **core backend**
-- `fastapi` — web api
-- `pathway` — real-time stream processor (learning analytics)
-- `postgres` — persistence
-- `openai` or `ollama` — model backend (explanations, quizzes)
+- `fastapi` — api framework  
+- `pathway` — stream computation (topic mastery tracking)  
+- `postgres` — persistent store  
+- `ollama`, `openai`, `gemini` — interchangeable llm backends  
 
-**optional**
-- `whisper` — speech-to-text
-- `tts` — voice replies
-
----
-
-## 🔁 adaptive learning
-
-your actions stream into pathway, which builds a live topic profile:
-
-- score trends (improving, plateauing)
-- weak topic detection
-- revision suggestions
-
-> **example**  
-> vectors quiz scores: 40% → 60% → 70%  
-> result: not mastered → "revise dot product again"
+**frontend**
+- `next.js` with `tailwindcss`  
+- login + protected routes  
+- clean, minimal ux focused on learning flow
 
 ---
 
-## 📦 usage
-
-run from the `backend/` folder:
+## quickstart
 
 ```bash
-# build containers
+# from backend/
 make rebuild
-
-# run server
 make up
 
-# run knowledge flow (pathway)
+# run adaptive learning flow
 python3 src/pathway_flow/pathway_main.py
-```
-
-- open [swagger](http://localhost:8000/docs) for api docs.
-
-## 🐳 docker setup 
-
-- for production 
-
-```sh 
-docker compose up --build
-```
-add your `.env`
-
-```ini
-SERVER_PORT=8000
-POSTGRES_USER=dev
-POSTGRES_PASSWORD=dev
-POSTGRES_DB=dev
-```
-
-## todo
-
-* enhance and minimalize frontend
-* leaderboard & gamification
-* spaced repetition engine
-
-## 📜 license
-[MIT](LICENSE) — built by zen with a lot of stress (๑•́‿•̀๑)
