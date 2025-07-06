@@ -30,7 +30,7 @@
 <p align="center" style="color:#bac2de; font-size: 14.5px; line-height: 1.6; max-width: 700px; margin: auto;">
   <strong style="color:#cdd6f4;">Whisper</strong> is a real-time exam revision agent that helps you <em>learn</em>, not just get answers.<br/>
   it explains concepts, quizzes you, and tracks topic mastery using <span style="color:#89b4fa;">LLMs</span> and <span style="color:#cba6f7;">Pathway</span> in a continuous feedback loop.<br/><br/>
-  <em style="color:#f38ba8;">built during Code Cubicle 4.0 — not a chatbot, but a learning engine.</em>
+  <em style="color:#f38ba8;">not a chatbot, but a learning engine.</em>
 </p>
 
 ---
